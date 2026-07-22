@@ -124,9 +124,19 @@ def test_path_basename():
 
 
 def test_constant_program_flagged():
-    # A single example gives an ambiguous, input-independent program.
-    prog = synthesize([("John Smith", "Smith, J.")])
+    # When no part of the output can be derived from the input, the only
+    # consistent program is a pure constant -- which is_constant() flags.
+    prog = synthesize([("x", "hello")])
     assert prog.is_constant()
+    assert prog.apply("anything") == "hello"
+
+
+def test_single_example_prefers_input_reference():
+    # A single example is ambiguous, but we should still prefer a program that
+    # references the input over one that memorises the whole output.
+    prog = synthesize([("Order #12345 shipped", "12345")])
+    assert not prog.is_constant()
+    assert prog.apply("Order #42 shipped") == "42"
 
 
 def test_real_transformation_not_constant():

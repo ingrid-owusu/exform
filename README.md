@@ -66,24 +66,28 @@ exform -e 'IN => OUT' [-e 'IN2 => OUT2' ...] [FILE]
 
 - Examples are given with `-e '<input> => <output>'` (repeatable). Reads from
   a `FILE` if given, otherwise stdin. Writes transformed lines to stdout.
-- One example is often enough; **two removes ambiguity.** If exform guesses
-  something you didn't mean, add an example that varies the part that should
-  change.
-- If the only consistent program is a **constant** (the same output for every
-  line), exform prints a warning to stderr — that's the classic sign of too
-  few / non-varied examples. Add another example, or pass `-q` to silence it.
+- One example is often enough; **two removes ambiguity.** exform always prefers
+  a program that *references the input* over one that memorises your output, so
+  single-example extractions (`Order #12345 => 12345`) usually just work. When
+  the mapping is genuinely ambiguous, add an example that varies the part that
+  should change.
+- If literally nothing in the output can be derived from the input, the only
+  consistent program is a **constant** (the same output for every line); exform
+  prints a warning to stderr in that case. Add another example, or pass `-q`
+  to silence it.
 
 ### More examples
 
-**Reorder / relabel CSV columns**
+**Reorder / relabel CSV columns** (two examples pin down which fields move)
 
 ```console
-$ printf '2021,apple,5\n2022,pear,9\n' | exform -e '2021,apple,5 => apple: 5'
+$ printf '2021,apple,5\n2022,pear,9\n' | exform \
+    -e '2021,apple,5 => apple: 5' -e '2022,pear,9 => pear: 9'
 apple: 5
 pear: 9
 ```
 
-**Extract the number from noisy text**
+**Extract the number from noisy text** (one example is enough here)
 
 ```console
 $ printf 'Order #12345 shipped\nOrder #42 shipped\n' | exform -e 'Order #12345 shipped => 12345'
@@ -137,9 +141,11 @@ actually make by hand:
 - case transforms (`lower`, `upper`, `Cap`, `Title`, first-initial);
 - literal glue between the pieces.
 
-Because it demands consistency across *all* examples, it won't hardcode your
-data as a constant unless that string really is identical in every example.
-The result is a program you can read (`--explain`) and rely on.
+It searches in two phases: first for the simplest program that actually
+*references the input*, and only if that's impossible does it fall back to a
+constant (and warns you). Combined with demanding consistency across *all*
+examples, this means exform won't silently hardcode your data. The result is a
+program you can read (`--explain`) and rely on.
 
 ### What it is not
 

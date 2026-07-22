@@ -264,6 +264,13 @@ def synthesize(
 ) -> Program:
     """Find the simplest Program mapping every example input to its output.
 
+    A program that ignores its input entirely (a pure constant) is almost never
+    what the user wants -- with a single example it can always "solve" the task
+    by memorising the output. So we search in two phases: first for the simplest
+    program that actually *references the input* at least once, and only if that
+    is impossible do we fall back to allowing a pure-constant program (which the
+    CLI then flags with a warning).
+
     Raises SynthesisError if no program in the DSL is consistent with the
     examples within the search budget.
     """
@@ -272,7 +279,6 @@ def synthesize(
 
     inputs = [i for i, _ in examples]
     outputs = [o for _, o in examples]
-    K = len(examples)
 
     atoms = build_atoms(inputs, use_slices=use_slices)
 
@@ -294,22 +300,49 @@ def synthesize(
             continue
         usable.append((a, tuple(vals)))
 
-    start = tuple([0] * K)
-    goal = tuple(len(o) for o in outputs)
+    # Phase 1: demand a program that references the input. Phase 2 (fallback):
+    # allow a pure constant. Share the search budget across both phases.
+    deadline = time.monotonic() + time_limit
+    try:
+        return _search(usable, inputs, outputs, require_input=True,
+                       max_expansions=max_expansions, deadline=deadline)
+    except SynthesisError:
+        return _search(usable, inputs, outputs, require_input=False,
+                       max_expansions=max_expansions, deadline=deadline)
 
-    # Dijkstra over position tuples.
-    heap: list[tuple[float, int, tuple[int, ...]]] = [(0.0, 0, start)]
-    best_cost: dict[tuple[int, ...], float] = {start: 0.0}
-    parent: dict[tuple[int, ...], tuple[tuple[int, ...], Atom]] = {}
+
+def _search(
+    usable: list[tuple[Atom, tuple[str, ...]]],
+    inputs: list[str],
+    outputs: list[str],
+    *,
+    require_input: bool,
+    max_expansions: int,
+    deadline: float,
+) -> Program:
+    """Dijkstra over (position-tuple, used_input?) states.
+
+    ``used_input`` becomes True as soon as a non-constant (input-referencing)
+    atom is applied. When ``require_input`` is set, only a goal state with
+    ``used_input`` True is accepted, so pure-constant programs are excluded.
+    """
+    K = len(outputs)
+    start_pos = tuple([0] * K)
+    goal_pos = tuple(len(o) for o in outputs)
+    start = (start_pos, False)
+
+    heap: list[tuple[float, int, tuple[tuple[int, ...], bool]]] = [(0.0, 0, start)]
+    best_cost: dict[tuple[tuple[int, ...], bool], float] = {start: 0.0}
+    parent: dict[tuple[tuple[int, ...], bool], tuple[tuple[tuple[int, ...], bool], Atom]] = {}
     counter = 0
     expansions = 0
-    deadline = time.monotonic() + time_limit
 
     while heap:
         cost, _, state = heapq.heappop(heap)
         if cost > best_cost.get(state, float("inf")):
             continue
-        if state == goal:
+        pos, used = state
+        if pos == goal_pos and (used or not require_input):
             return _reconstruct(state, parent)
         expansions += 1
         if expansions > max_expansions:
@@ -317,11 +350,12 @@ def synthesize(
         if (expansions & 0x3FF) == 0 and time.monotonic() > deadline:
             break
 
-        # Extractor transitions.
+        # Extractor transitions (mark the input as referenced).
         for a, vals in usable:
-            nxt = _advance(state, vals, outputs)
-            if nxt is None:
+            nxt_pos = _advance(pos, vals, outputs)
+            if nxt_pos is None:
                 continue
+            nxt = (nxt_pos, True)
             nc = cost + a.cost
             if nc < best_cost.get(nxt, float("inf")):
                 best_cost[nxt] = nc
@@ -331,11 +365,12 @@ def synthesize(
 
         # Constant transitions: consume the longest common prefix (and each of
         # its non-empty prefixes) of the remaining outputs. This produces glue
-        # literals like ", " without hardcoding data.
-        lcp = _remaining_lcp(state, outputs)
+        # literals like ", " without hardcoding data. The used flag is
+        # unchanged (constants do not reference the input).
+        lcp = _remaining_lcp(pos, outputs)
         for length in range(1, len(lcp) + 1):
             text = lcp[:length]
-            nxt = tuple(p + length for p in state)
+            nxt = (tuple(p + length for p in pos), used)
             catom = _const_atom(text)
             nc = cost + catom.cost
             if nc < best_cost.get(nxt, float("inf")):
@@ -384,9 +419,8 @@ def _remaining_lcp(state, outputs) -> str:
     return "".join(out)
 
 
-def _reconstruct(goal, parent) -> Program:
+def _reconstruct(state, parent) -> Program:
     atoms: list[Atom] = []
-    state = goal
     while state in parent:
         prev, atom = parent[state]
         atoms.append(atom)
