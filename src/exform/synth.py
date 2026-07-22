@@ -236,6 +236,15 @@ class Program:
     def explain(self) -> str:
         return " + ".join(a.name for a in self.atoms)
 
+    def is_constant(self) -> bool:
+        """True if the program ignores its input (all atoms are literals).
+
+        Such a program emits the same output for every line, which almost
+        always signals too few / non-varied examples rather than a real
+        transformation.
+        """
+        return all(getattr(a, "kind", "expr") == "const" for a in self.atoms)
+
 
 # ---------------------------------------------------------------------------
 # Uniform-cost search over multi-example position tuples.

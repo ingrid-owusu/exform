@@ -1,11 +1,11 @@
-__pycache__/
-*.pyc
 *.egg-info/
+*.pyc
+*.tsv.out
 .eggs/
-build/
-dist/
+.mypy_cache/
 .pytest_cache/
 .venv/
+__pycache__/
+build/
+dist/
 venv/
-.mypy_cache/
-*.tsv.out

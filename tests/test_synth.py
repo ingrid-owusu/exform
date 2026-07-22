@@ -121,3 +121,14 @@ def test_path_basename():
         ["/etc/hosts"],
     )
     assert out == ["hosts"]
+
+
+def test_constant_program_flagged():
+    # A single example gives an ambiguous, input-independent program.
+    prog = synthesize([("John Smith", "Smith, J.")])
+    assert prog.is_constant()
+
+
+def test_real_transformation_not_constant():
+    prog = synthesize([("John Smith", "Smith, J."), ("Grace Hopper", "Hopper, G.")])
+    assert not prog.is_constant()

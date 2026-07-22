@@ -69,6 +69,9 @@ exform -e 'IN => OUT' [-e 'IN2 => OUT2' ...] [FILE]
 - One example is often enough; **two removes ambiguity.** If exform guesses
   something you didn't mean, add an example that varies the part that should
   change.
+- If the only consistent program is a **constant** (the same output for every
+  line), exform prints a warning to stderr — that's the classic sign of too
+  few / non-varied examples. Add another example, or pass `-q` to silence it.
 
 ### More examples
 
@@ -114,6 +117,7 @@ $ printf '(415) 555-1234\n(212) 999-0000\n' | exform \
 | `-e, --example 'IN => OUT'` | an example (repeatable) |
 | `-E, --examples-file FILE` | read examples from a file, one per line |
 | `--explain` | print the inferred program to stderr |
+| `-q, --quiet` | suppress non-fatal warnings (e.g. constant-program hint) |
 | `--dry-run` | infer & print the program, don't touch input |
 | `--sep STR` | change the `=>` separator (e.g. `--sep $'\t'`) |
 | `--on-error {keep,empty,skip,fail}` | what to do with a line the program can't handle (default: keep it) |

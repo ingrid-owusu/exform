@@ -83,6 +83,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="print the inferred program to stderr",
     )
     p.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="suppress non-fatal warnings (e.g. constant-program hint)",
+    )
+    p.add_argument(
         "--dry-run",
         action="store_true",
         help="only infer and print the program; do not read/transform input",
@@ -137,6 +143,17 @@ def run(argv: Optional[list[str]] = None) -> int:
 
     if args.explain or args.dry_run:
         sys.stderr.write(f"program: {program.explain()}\n")
+
+    if program.is_constant() and not args.quiet:
+        sys.stderr.write(
+            "exform: warning: the inferred program is a constant and ignores "
+            "the input\n"
+            "        (every line would become the same text). This usually "
+            "means too few\n"
+            "        or non-varied examples. Add another example, e.g. "
+            "-e 'OTHER_IN => OTHER_OUT',\n"
+            "        or pass --quiet to silence this warning.\n"
+        )
 
     if args.dry_run:
         return 0

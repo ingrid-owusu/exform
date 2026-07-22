@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+- Warn (on stderr) when the inferred program is a constant that ignores the
+  input — the classic symptom of too few / non-varied examples. Add `-q`/
+  `--quiet` to silence non-fatal warnings.
+
 ## 0.1.0
 - First public release.
 - Deterministic programming-by-example engine (uniform-cost search over an
