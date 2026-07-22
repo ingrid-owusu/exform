@@ -1,6 +1,13 @@
 # Changelog
 
 ## Unreleased
+- **Warn when the inferred program hardcodes data copied from the input.**
+  A single, ambiguous example (e.g. `-e '(555) 123-4567 => 555-123-4567'`) can
+  only be "solved" by memorising the `555` prefix, which then produces wrong
+  output on the next line. exform now detects data-bearing literals that appear
+  verbatim in an example's input and warns (on stderr) that the example is
+  ambiguous and another varied example is needed. Pure glue (`, `, `-`, `/`) is
+  never flagged. Silence with `-q`/`--quiet`.
 - **Add `@` and `=` as field delimiters.** Extracting the username from an
   email (`jane.doe@corp.com => jane.doe`) or the value from a `key=value` pair
   now works directly via `field(@,0)` / `field(=,1)` instead of overfitting a

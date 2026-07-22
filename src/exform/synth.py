@@ -247,6 +247,34 @@ class Program:
         """
         return all(getattr(a, "kind", "expr") == "const" for a in self.atoms)
 
+    def memorized_literals(self, inputs: Iterable[str]) -> list[str]:
+        """Literal atoms that look *copied out of the input* rather than glue.
+
+        A constant carrying data (e.g. ``'555-'`` or ``'Doe'``) that also
+        appears verbatim in an example's input is the classic sign of a
+        single-/under-specified example being memorised: the program reproduces
+        that chunk as a fixed string instead of deriving it, so it silently
+        emits wrong output on the very next line. Pure glue (``', '``, ``'-'``,
+        ``'/'``) has no alphanumerics and is never flagged.
+        """
+        ins = list(inputs)
+        flagged: list[str] = []
+        for a in self.atoms:
+            if getattr(a, "kind", "expr") != "const":
+                continue
+            text = a("") or ""
+            # Pull out maximal alphanumeric runs (>= 2 chars) from the literal
+            # and see if any is copied verbatim from an example's input. We
+            # ignore surrounding glue (dashes, slashes, spaces) because the
+            # data-bearing run is what signals memorisation: '555-' is glue
+            # 'dash' plus the run '555', which appears in the input '(555) ...'.
+            runs = [r for r in re.findall(r"[A-Za-z0-9]+", text) if len(r) >= 2]
+            for r in runs:
+                if any(r in s for s in ins):
+                    flagged.append(r)
+                    break
+        return flagged
+
 
 # ---------------------------------------------------------------------------
 # Uniform-cost search over multi-example position tuples.

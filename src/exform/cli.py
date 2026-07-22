@@ -154,6 +154,19 @@ def run(argv: Optional[list[str]] = None) -> int:
             "-e 'OTHER_IN => OTHER_OUT',\n"
             "        or pass --quiet to silence this warning.\n"
         )
+    else:
+        memo = program.memorized_literals(i for i, _ in examples)
+        if memo and not args.quiet:
+            shown = ", ".join(repr(m) for m in memo[:3])
+            sys.stderr.write(
+                "exform: warning: the inferred program hardcodes " + shown + " "
+                "copied from your\n"
+                "        example's input, so it will likely be wrong on other "
+                "lines. This means the\n"
+                "        example is ambiguous. Add another varied example, e.g. "
+                "-e 'OTHER_IN => OTHER_OUT',\n"
+                "        so exform can generalise (pass --quiet to silence).\n"
+            )
 
     if args.dry_run:
         return 0

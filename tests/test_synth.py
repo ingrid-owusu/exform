@@ -160,3 +160,34 @@ def test_key_value_equals_delimiter():
         ["role=admin"],
     )
     assert out == ["admin"]
+
+
+def test_memorized_literal_detected():
+    # A single phone example is ambiguous: the '555' prefix could be a constant
+    # or come from the input. exform picks a program that hardcodes it, and
+    # memorized_literals() must surface that so the CLI can warn.
+    prog = synthesize([("(555) 123-4567", "555-123-4567")])
+    memo = prog.memorized_literals(["(555) 123-4567"])
+    assert "555" in memo
+
+
+def test_generalising_program_has_no_memorized_literals():
+    # With two varied examples the program generalises and copies nothing.
+    prog = synthesize(
+        [("(555) 123-4567", "555-123-4567"), ("(444) 000-1111", "444-000-1111")]
+    )
+    assert prog.memorized_literals(["(555) 123-4567", "(444) 000-1111"]) == []
+
+
+def test_glue_literal_not_flagged_as_memorized():
+    # Punctuation glue like ', ' must never be reported as memorised data,
+    # even though it appears in outputs.
+    prog = synthesize([("John Smith", "Smith, J."), ("Grace Hopper", "Hopper, G.")])
+    assert prog.memorized_literals(["John Smith", "Grace Hopper"]) == []
+
+
+def test_prefix_constant_not_flagged_when_absent_from_input():
+    # A genuine added constant ('item ') that does not appear in the input is
+    # legitimate and must not be flagged.
+    prog = synthesize([("1", "item 1"), ("2", "item 2")])
+    assert prog.memorized_literals(["1", "2"]) == []

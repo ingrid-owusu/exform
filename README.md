@@ -71,6 +71,11 @@ exform -e 'IN => OUT' [-e 'IN2 => OUT2' ...] [FILE]
   single-example extractions (`Order #12345 => 12345`) usually just work. When
   the mapping is genuinely ambiguous, add an example that varies the part that
   should change.
+- When one example is ambiguous, exform tells you. If the inferred program has
+  to **hardcode a chunk copied from your input** (e.g. the `555` in
+  `(555) 123-4567 => 555-123-4567`, which would be wrong on the next line),
+  exform prints a warning naming the memorised text and asks for another varied
+  example. Pure glue like `, ` or `/` is never flagged.
 - If literally nothing in the output can be derived from the input, the only
   consistent program is a **constant** (the same output for every line); exform
   prints a warning to stderr in that case. Add another example, or pass `-q`
