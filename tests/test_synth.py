@@ -142,3 +142,21 @@ def test_single_example_prefers_input_reference():
 def test_real_transformation_not_constant():
     prog = synthesize([("John Smith", "Smith, J."), ("Grace Hopper", "Hopper, G.")])
     assert not prog.is_constant()
+
+
+def test_email_username_at_delimiter():
+    # Splitting on '@' is a very common first task; a single example should
+    # generalise via field(@,0) rather than overfitting a fixed slice.
+    prog, out = infer_apply(
+        [("jane.doe@corp.com", "jane.doe")],
+        ["bob.lee@corp.com", "x@y.io"],
+    )
+    assert out == ["bob.lee", "x"]
+
+
+def test_key_value_equals_delimiter():
+    prog, out = infer_apply(
+        [("name=jane", "jane"), ("city=paris", "paris")],
+        ["role=admin"],
+    )
+    assert out == ["admin"]

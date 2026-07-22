@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+- **Add `@` and `=` as field delimiters.** Extracting the username from an
+  email (`jane.doe@corp.com => jane.doe`) or the value from a `key=value` pair
+  now works directly via `field(@,0)` / `field(=,1)` instead of overfitting a
+  fixed-length slice. These are among the most common first tasks a user tries.
 - **Prefer programs that reference the input.** Synthesis now runs in two
   phases: it first searches for the simplest program that actually uses the
   input, and only falls back to a pure constant if none exists. This fixes the

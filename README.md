@@ -105,6 +105,14 @@ $ printf '2021-05-01 ERROR boom\n2022-12-31 WARN cold\n' | exform \
 31/12/2022 cold
 ```
 
+**Pull the username out of an email address** (one example is enough)
+
+```console
+$ printf 'jane.doe@corp.com\nbob.lee@corp.com\n' | exform -e 'jane.doe@corp.com => jane.doe'
+jane.doe
+bob.lee
+```
+
 **Normalise phone numbers**
 
 ```console
@@ -134,7 +142,7 @@ program that reproduces *every* example you gave, using a uniform-cost
 (Dijkstra) search over a multi-example alignment. The DSL covers the moves you
 actually make by hand:
 
-- split into fields by whitespace or a delimiter (`, ; | : / - _ . tab`) and
+- split into fields by whitespace or a delimiter (`, ; | : / @ = - _ . tab`) and
   pick a field by index (including from the end);
 - pull a match with a handful of built-in patterns (integers, decimals, words,
   emails, URLs, ISO dates, hex colours);
