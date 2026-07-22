@@ -99,3 +99,25 @@ def test_single_example_is_consistent_even_if_ambiguous():
     # With one example the whole output is a valid (if trivial) program.
     prog = synthesize([("x", "y")])
     assert prog.apply("x") == "y"
+
+
+def test_unicode_roundtrip():
+    prog, out = infer_apply(
+        [("café latte", "LATTE"), ("thé vert", "VERT")],
+        ["número dos"],
+    )
+    assert out == ["DOS"]
+
+
+def test_empty_line_handled():
+    prog = synthesize([("a b", "b"), ("c d", "d")])
+    # a line with too few fields cannot be transformed -> None (CLI decides)
+    assert prog.apply("") is None
+
+
+def test_path_basename():
+    prog, out = infer_apply(
+        [("/usr/local/bin/exform", "exform"), ("/home/x/a.txt", "a.txt")],
+        ["/etc/hosts"],
+    )
+    assert out == ["hosts"]

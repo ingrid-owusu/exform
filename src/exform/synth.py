@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import heapq
 import re
+import time
 from dataclasses import dataclass, field
 from typing import Callable, Iterable, Optional
 
@@ -250,6 +251,7 @@ def synthesize(
     *,
     use_slices: bool = True,
     max_expansions: int = 400_000,
+    time_limit: float = 5.0,
 ) -> Program:
     """Find the simplest Program mapping every example input to its output.
 
@@ -292,6 +294,7 @@ def synthesize(
     parent: dict[tuple[int, ...], tuple[tuple[int, ...], Atom]] = {}
     counter = 0
     expansions = 0
+    deadline = time.monotonic() + time_limit
 
     while heap:
         cost, _, state = heapq.heappop(heap)
@@ -301,6 +304,8 @@ def synthesize(
             return _reconstruct(state, parent)
         expansions += 1
         if expansions > max_expansions:
+            break
+        if (expansions & 0x3FF) == 0 and time.monotonic() > deadline:
             break
 
         # Extractor transitions.
