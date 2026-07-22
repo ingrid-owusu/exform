@@ -129,12 +129,40 @@ $ printf '(415) 555-1234\n(212) 999-0000\n' | exform \
 2129990000
 ```
 
+### Fill mode — the Flash Fill workflow
+
+Sometimes writing `IN => OUT` on the command line is awkward (quoting, long
+lines). `--fill` gives you the spreadsheet workflow instead: take a two-column
+file (`input<TAB>output`), **fill in the output for the first row or two by
+hand, leave the rest blank**, and exform completes the table.
+
+```console
+$ cat people.tsv
+John Smith	Smith, J.
+Grace Hopper	Hopper, G.
+Alan Turing
+Ada Lovelace
+
+$ exform --fill people.tsv
+John Smith	Smith, J.
+Grace Hopper	Hopper, G.
+Alan Turing	Turing, A.
+Ada Lovelace	Lovelace, A.
+```
+
+Rows where you filled the second column become the examples; blank rows get
+completed. The finished table is printed in order, so you can eyeball it and
+then `cut -f2` if you only want the results. Use `--col-sep` for a different
+column delimiter (e.g. `--col-sep ,` for CSV).
+
 ### Handy flags
 
 | flag | meaning |
 |------|---------|
 | `-e, --example 'IN => OUT'` | an example (repeatable) |
 | `-E, --examples-file FILE` | read examples from a file, one per line |
+| `--fill` | Flash Fill mode: complete a 2-column `input<TAB>output` table |
+| `--col-sep SEP` | column separator for `--fill` (default: TAB) |
 | `--explain` | print the inferred program to stderr |
 | `-q, --quiet` | suppress non-fatal warnings (e.g. constant-program hint) |
 | `--dry-run` | infer & print the program, don't touch input |

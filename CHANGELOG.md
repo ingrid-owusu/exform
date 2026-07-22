@@ -1,6 +1,13 @@
 # Changelog
 
 ## Unreleased
+- **`--fill` (Flash Fill mode).** Take a two-column file (`input<TAB>output`),
+  fill in the output for the first row or two by hand, leave the rest blank, and
+  exform completes the table — the spreadsheet Flash Fill workflow, on the
+  command line. Filled rows become the examples; blank rows get completed; the
+  finished table is printed in order. Column separator configurable via
+  `--col-sep` (default TAB). Same generalisation guarantees and ambiguity
+  warnings as `-e`.
 - **Docs: animated terminal demo** (`assets/demo.svg`, self-contained, no deps,
   regenerable via `assets/make_demo.py`) added to the top of the README. Falls
   back to a fully-readable static frame on renderers that don't run SMIL.

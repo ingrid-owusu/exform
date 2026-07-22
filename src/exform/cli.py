@@ -78,6 +78,19 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"separator between input and output in examples (default: {_ARROW!r})",
     )
     p.add_argument(
+        "--fill",
+        action="store_true",
+        help="FlashFill mode: read a 2-column file (input<TAB>output). Rows "
+        "where you filled in the output become examples; rows with a blank "
+        "output are completed. Prints the finished table.",
+    )
+    p.add_argument(
+        "--col-sep",
+        default="\t",
+        metavar="SEP",
+        help="column separator for --fill mode (default: TAB)",
+    )
+    p.add_argument(
         "--explain",
         action="store_true",
         help="print the inferred program to stderr",
@@ -119,8 +132,98 @@ def _iter_input(path: Optional[str]):
                 yield line.rstrip("\n")
 
 
+def _run_fill(args) -> int:
+    """FlashFill mode.
+
+    Read a 2-column table (input<COLSEP>output). Rows whose output cell is
+    non-empty are treated as examples; rows with a blank/absent output cell are
+    completed by the inferred program. The full finished table is written to
+    stdout in the same order.
+    """
+    colsep = args.col_sep
+    rows: list[tuple[str, Optional[str]]] = []
+    examples: list[tuple[str, str]] = []
+    for line in _iter_input(args.file):
+        if colsep in line:
+            inp, out = line.split(colsep, 1)
+        else:
+            inp, out = line, ""
+        out_stripped = out.strip()
+        if out_stripped:
+            examples.append((inp, out_stripped))
+            rows.append((inp, out_stripped))
+        else:
+            rows.append((inp, None))
+
+    if not examples:
+        sys.stderr.write(
+            "exform: --fill needs at least one completed row "
+            f"(input{colsep!r}output). Fill in the output for the first row "
+            "or two, then re-run.\n"
+        )
+        return 2
+
+    n_blank = sum(1 for _, o in rows if o is None)
+    if n_blank == 0:
+        # Nothing to do; just echo back. Still infer so --explain works.
+        pass
+
+    try:
+        program: Program = synthesize(examples, use_slices=not args.no_slices)
+    except SynthesisError as exc:
+        sys.stderr.write(f"exform: {exc}\n")
+        sys.stderr.write(
+            "        try filling in another representative row.\n"
+        )
+        return 1
+
+    if args.explain:
+        sys.stderr.write(f"program: {program.explain()}\n")
+
+    if not args.quiet:
+        memo = program.memorized_literals(i for i, _ in examples)
+        if program.is_constant():
+            sys.stderr.write(
+                "exform: warning: the inferred rule is constant (every row "
+                "would get the same output). Fill in another, more varied "
+                "row.\n"
+            )
+        elif memo:
+            shown = ", ".join(repr(m) for m in memo[:3])
+            sys.stderr.write(
+                "exform: warning: the inferred rule hardcodes " + shown + " "
+                "copied from a completed row, so other rows will likely be "
+                "wrong. Fill in another varied row so exform can generalise.\n"
+            )
+
+    out = sys.stdout
+    for inp, given in rows:
+        if given is not None:
+            out.write(inp + colsep + given + "\n")
+            continue
+        result = program.apply(inp)
+        if result is None:
+            if args.on_error == "keep":
+                result = ""
+            elif args.on_error == "empty":
+                result = ""
+            elif args.on_error == "skip":
+                out.write(inp + "\n")
+                continue
+            else:  # fail
+                sys.stderr.write(
+                    f"exform: could not fill row: {inp!r}\n"
+                )
+                return 1
+        out.write(inp + colsep + result + "\n")
+    return 0
+
+
 def run(argv: Optional[list[str]] = None) -> int:
     args = build_parser().parse_args(argv)
+
+    if args.fill:
+        return _run_fill(args)
 
     examples: list[tuple[str, str]] = []
     if args.examples_file:
