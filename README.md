@@ -169,6 +169,19 @@ arithmetic, conditionals, or context from other lines, it's out of scope — and
 exform will tell you it couldn't find a consistent program rather than guess.
 Add an example, or reach for a real script.
 
+## Prior art
+
+Programming-by-example (PBE) for strings is a well-studied idea. Microsoft's
+FlashFill (the research is Gulwani's *PROSE* framework) put it in Excel;
+[StringSolver](https://github.com/MikaelMayer/StringSolver) is a Scala
+implementation aimed largely at batch file renaming. exform is a deliberately
+small, different point in that space: a **zero-dependency, pipx/uvx-installable
+Python CLI** that behaves like an ordinary Unix filter (stdin→stdout,
+deterministic, offline), works line-by-line on arbitrary text, and always
+*shows you the program it inferred* so you never have to trust a black box. It
+is not trying to match the expressiveness of PROSE — it's trying to be the
+thing you actually reach for in a terminal.
+
 ## Library use
 
 ```python
