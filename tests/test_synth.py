@@ -1,0 +1,101 @@
+import pytest
+
+from exform import Program, SynthesisError, synthesize
+
+
+def infer_apply(examples, tests):
+    prog = synthesize(examples)
+    return prog, [prog.apply(t) for t in tests]
+
+
+def test_name_reformat():
+    prog, out = infer_apply(
+        [("John Smith", "Smith, J."), ("Grace Hopper", "Hopper, G.")],
+        ["Alan Turing"],
+    )
+    assert out == ["Turing, A."]
+
+
+def test_csv_reorder():
+    prog, out = infer_apply(
+        [("2021,apple,5", "apple: 5"), ("2022,pear,9", "pear: 9")],
+        ["2023,plum,2"],
+    )
+    assert out == ["plum: 2"]
+
+
+def test_extract_number():
+    prog, out = infer_apply(
+        [("Order #12345 shipped", "12345"), ("Order #7 shipped", "7")],
+        ["Order #42 shipped"],
+    )
+    assert out == ["42"]
+
+
+def test_email_upper():
+    prog, out = infer_apply(
+        [("alice@example.com", "ALICE at EXAMPLE.COM"),
+         ("bob@test.org", "BOB at TEST.ORG")],
+        ["carol@mail.net"],
+    )
+    assert out == ["CAROL at MAIL.NET"]
+
+
+def test_iso_date_to_slashes():
+    prog, out = infer_apply(
+        [("2021-05-01 ERROR boom", "01/05/2021 boom"),
+         ("2022-12-31 WARN cold", "31/12/2022 cold")],
+        ["2020-01-15 INFO ok"],
+    )
+    assert out == ["15/01/2020 ok"]
+
+
+def test_phone_digits():
+    prog, out = infer_apply(
+        [("(415) 555-1234", "4155551234"), ("(212) 999-0000", "2129990000")],
+        ["(650) 111-2222"],
+    )
+    assert out == ["6501112222"]
+
+
+def test_upper_whole_line():
+    prog, out = infer_apply(
+        [("hello", "HELLO"), ("world foo", "WORLD FOO")],
+        ["mixed Case"],
+    )
+    assert out == ["MIXED CASE"]
+
+
+def test_all_examples_are_satisfied():
+    examples = [("John Smith", "Smith, J."), ("Grace Hopper", "Hopper, G.")]
+    prog = synthesize(examples)
+    for i, o in examples:
+        assert prog.apply(i) == o
+
+
+def test_program_is_inspectable():
+    prog = synthesize([("a,b", "b"), ("c,d", "d")])
+    assert isinstance(prog, Program)
+    assert isinstance(prog.explain(), str)
+    assert prog.explain()
+
+
+def test_no_examples_raises():
+    with pytest.raises(SynthesisError):
+        synthesize([])
+
+
+def test_impossible_is_reported():
+    # Output cannot be produced from input by any DSL program.
+    with pytest.raises(SynthesisError):
+        synthesize(
+            [("abc", "totally unrelated \u2603 zzz"),
+             ("def", "another \u2603 unrelated one")],
+            use_slices=False,
+        )
+
+
+def test_single_example_is_consistent_even_if_ambiguous():
+    # With one example the whole output is a valid (if trivial) program.
+    prog = synthesize([("x", "y")])
+    assert prog.apply("x") == "y"

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "exform"
+version = "0.1.0"
+description = "Reshape text by example — deterministic, offline, no regex, no LLM."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Ingrid Owusu" }]
+keywords = [
+    "flashfill", "programming-by-example", "text", "transform", "cli",
+    "sed", "awk", "data-wrangling", "synthesis",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Text Processing",
+    "Topic :: Utilities",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/INGRID_GH/exform"
+Repository = "https://github.com/INGRID_GH/exform"
+Issues = "https://github.com/INGRID_GH/exform/issues"
+
+[project.scripts]
+exform = "exform.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/exform"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
