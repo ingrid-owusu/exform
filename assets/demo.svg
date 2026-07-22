@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="236" viewBox="0 0 780 236" font-family="ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace" font-size="15">
+<rect x="0" y="0" width="780" height="236" rx="10" fill="#1b1e24"/>
+<circle cx="20" cy="20" r="6" fill="#ff5f56"/>
+<circle cx="40" cy="20" r="6" fill="#ffbd2e"/>
+<circle cx="60" cy="20" r="6" fill="#27c93f"/>
+<text x="390" y="25" fill="#7d8590" text-anchor="middle" font-size="13">exform — reshape text by example</text>
+<text y="61" opacity="1"><tspan x="18" fill="#8ddb8c" xml:space="preserve">$ </tspan><tspan x="36" fill="#d7dae0" xml:space="preserve">printf &#x27;John Smith\nGrace Hopper\nAlan Turing\n&#x27; | \</tspan><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.022;0.050;0.965;1" dur="9.0s" repeatCount="indefinite"/></text>
+<text y="83" opacity="1"><tspan x="18" fill="#d7dae0" xml:space="preserve">    exform -e </tspan><tspan x="144" fill="#e2c08d" xml:space="preserve">&#x27;John Smith =&gt; Smith, J.&#x27;</tspan><tspan x="369" fill="#d7dae0" xml:space="preserve"> \</tspan><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.056;0.083;0.965;1" dur="9.0s" repeatCount="indefinite"/></text>
+<text y="105" opacity="1"><tspan x="18" fill="#d7dae0" xml:space="preserve">           -e </tspan><tspan x="144" fill="#e2c08d" xml:space="preserve">&#x27;Grace Hopper =&gt; Hopper, G.&#x27;</tspan><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.100;0.128;0.965;1" dur="9.0s" repeatCount="indefinite"/></text>
+<text y="127" opacity="1"><tspan x="18" fill="#7ec699" xml:space="preserve">Smith, J.</tspan><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.289;0.317;0.965;1" dur="9.0s" repeatCount="indefinite"/></text>
+<text y="149" opacity="1"><tspan x="18" fill="#7ec699" xml:space="preserve">Hopper, G.</tspan><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.322;0.350;0.965;1" dur="9.0s" repeatCount="indefinite"/></text>
+<text y="171" opacity="1"><tspan x="18" fill="#7ec699" xml:space="preserve">Turing, A.</tspan><tspan x="108" fill="#7d8590" xml:space="preserve">      ← line it never saw</tspan><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.356;0.383;0.965;1" dur="9.0s" repeatCount="indefinite"/></text>
+<text y="193" opacity="1"><tspan x="18" fill="#8ddb8c" xml:space="preserve">$ </tspan><tspan x="36" fill="#d7dae0" xml:space="preserve">... --dry-run</tspan><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.556;0.583;0.965;1" dur="9.0s" repeatCount="indefinite"/></text>
+<text y="215" opacity="1"><tspan x="18" fill="#7d8590" xml:space="preserve">program: </tspan><tspan x="99" fill="#6cb6ff" xml:space="preserve">field(ws,1) + &#x27;, &#x27; + line.first + &#x27;.&#x27;</tspan><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.667;0.694;0.965;1" dur="9.0s" repeatCount="indefinite"/></text>
+<rect x="110" y="203" width="9" height="15" fill="#d7dae0" opacity="0"><animate attributeName="opacity" values="0;0;1;0;1;0;1;0" keyTimes="0;0.66;0.72;0.78;0.84;0.90;0.96;1" dur="9.0s" repeatCount="indefinite"/></rect>
+</svg>

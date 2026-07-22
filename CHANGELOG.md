@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- **Docs: animated terminal demo** (`assets/demo.svg`, self-contained, no deps,
+  regenerable via `assets/make_demo.py`) added to the top of the README. Falls
+  back to a fully-readable static frame on renderers that don't run SMIL.
 - **Warn when the inferred program hardcodes data copied from the input.**
   A single, ambiguous example (e.g. `-e '(555) 123-4567 => 555-123-4567'`) can
   only be "solved" by memorising the `555` prefix, which then produces wrong

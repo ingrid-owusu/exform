@@ -5,6 +5,8 @@ and it figures out the transformation, then applies it to your whole file or
 stream. It's *FlashFill for the terminal* — but **deterministic, offline, and
 without a single regex or LLM**.
 
+![exform demo: two examples in, the whole stream reshaped](assets/demo.svg)
+
 ```console
 $ printf 'John Smith\nGrace Hopper\nAlan Turing\n' | exform \
     -e 'John Smith  => Smith, J.' \
