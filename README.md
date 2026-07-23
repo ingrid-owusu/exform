@@ -85,6 +85,12 @@ exform -e 'IN => OUT' [-e 'IN2 => OUT2' ...] [FILE]
 
 ### More examples
 
+> **Looking for more?** The [cookbook (`EXAMPLES.md`)](EXAMPLES.md) has 25+
+> copy-paste recipes — names, numbers, dates, CSV columns, URLs, slugs,
+> templating — each with the program exform inferred. Every command there is
+> verified before release.
+
+
 **Reorder / relabel CSV columns** (two examples pin down which fields move)
 
 ```console

@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+- **Cookbook (`EXAMPLES.md`).** A gallery of 25+ verified copy-paste recipes
+  across names, numbers/IDs, case & slugs, web & files, CSV/columns, dates, and
+  templating — each showing the program exform inferred. Every command is run
+  and diffed against its documented output before release. Linked from the README.
 - **Slugify & whitespace reshaping (variable word count).** exform can now learn
   `-e 'Hello World => hello-world'` and infers `line.slug`: lowercase, runs of
   punctuation/whitespace collapse to a single `-`, trimmed. It generalises to
