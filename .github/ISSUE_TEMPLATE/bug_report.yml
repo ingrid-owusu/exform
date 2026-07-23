@@ -1,0 +1,24 @@
+name: Bug report
+description: Something exform got wrong or a crash
+labels: [bug]
+body:
+  - type: textarea
+    id: examples
+    attributes:
+      label: The examples you gave
+      description: The exact `-e "IN => OUT"` pairs (or --fill input).
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected vs. what happened
+      description: Include the inferred program from `--explain` if you can.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: exform version
+      description: Output of `exform --version` (or the commit).

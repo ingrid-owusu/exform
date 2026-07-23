@@ -1,0 +1,17 @@
+name: Feature / transform request
+description: A transformation exform can't learn yet
+labels: [enhancement]
+body:
+  - type: textarea
+    id: task
+    attributes:
+      label: The transformation
+      description: Show before → after examples of what you want exform to learn.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Why / where you hit this
+      description: What were you wrangling when exform fell short?

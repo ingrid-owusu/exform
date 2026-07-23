@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- **PyPI publishing workflow.** A GitHub Actions `publish.yml` builds and
+  releases to PyPI via trusted publishing (OIDC, no stored token) whenever a
+  GitHub release is published, so `pipx install exform` tracks each release.
+- **Issue templates.** Structured bug-report and feature/transform-request forms
+  under `.github/ISSUE_TEMPLATE/` to make good reports easy.
 - **Cookbook (`EXAMPLES.md`).** A gallery of 25+ verified copy-paste recipes
   across names, numbers/IDs, case & slugs, web & files, CSV/columns, dates, and
   templating — each showing the program exform inferred. Every command is run
