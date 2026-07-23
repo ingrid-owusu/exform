@@ -222,3 +222,25 @@ def test_grouping_not_flagged_as_memorized_single_example():
     prog = synthesize([("1234567", "1,234,567")])
     assert prog.memorized_literals(["1234567"]) == []
     assert prog.apply("89012") == "89,012"
+
+
+def test_zero_pad_ids():
+    prog, out = infer_apply(
+        [("7", "007"), ("42", "042")],
+        ["1", "1000", "999"],
+    )
+    assert out == ["001", "1000", "999"]
+
+
+def test_zero_pad_filename_sequence():
+    prog, out = infer_apply(
+        [("img_7.png", "img_0007.png"), ("img_42.png", "img_0042.png")],
+        ["img_123.png"],
+    )
+    assert out == ["img_0123.png"]
+
+
+def test_zero_pad_not_flagged_memorized():
+    # zpad from a single example must not be flagged as memorised literal glue.
+    prog = synthesize([("7", "007")])
+    assert prog.memorized_literals(["7"]) == []

@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- **Zero-padding to a fixed width.** exform can learn `-e '7 => 007'` and infers
+  `line.zpad3`, padding integers to a fixed width and generalising (longer
+  numbers pass through untouched). It composes with extraction, so
+  `img_7.png => img_0007.png` renames a whole sequence to `img_0123.png`. A
+  single example is enough and nothing is memorised.
 - **Numeric thousands grouping.** exform can now learn spreadsheet-style number
   formatting: `-e '1234567 => 1,234,567'` infers `line.group,` and generalises
   to every line (a single example is enough — nothing is memorised). The output

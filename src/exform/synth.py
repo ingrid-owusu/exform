@@ -44,6 +44,24 @@ def _group(s: str, sep: str) -> str:
     return f"{sign}{grouped}{frac}"
 
 
+_INTRE = re.compile(r"([+-]?)(\d+)\Z")
+
+
+def _zpad(s: str, width: int) -> str:
+    """Left-pad an integer string with zeros to `width` digits.
+
+    Only applies to plain integer strings (optionally signed); anything else
+    is returned untouched so it degrades to identity on non-numeric lines
+    instead of producing nonsense like ``00abc``. A sign is preserved in front
+    of the padding (``-7`` -> ``-007`` at width 3).
+    """
+    m = _INTRE.match(s)
+    if not m:
+        return s
+    sign, digits = m.group(1), m.group(2)
+    return f"{sign}{digits.rjust(width, '0')}"
+
+
 TRANSFORMS: dict[str, Callable[[str], str]] = {
     "": lambda s: s,
     "lower": str.lower,
@@ -59,6 +77,11 @@ TRANSFORMS: dict[str, Callable[[str], str]] = {
     "group,": lambda s: _group(s, ","),
     "group_": lambda s: _group(s, " "),
     "group.": lambda s: _group(s, "."),
+    # Zero-pad an integer to a fixed width (IDs, image0001.jpg, version parts).
+    # One transform per width; the enumerative search picks the width that is
+    # consistent with every example, and a second example rules out plain
+    # literal-glue ("00" + n) which would be wrong at a different length.
+    **{f"zpad{w}": (lambda s, _w=w: _zpad(s, _w)) for w in range(2, 9)},
 }
 
 # Cost added for using a transform (identity is free, exotic ones cost more).
@@ -74,6 +97,9 @@ _TRANSFORM_COST = {
     "group,": 2.5,
     "group_": 2.8,
     "group.": 2.8,
+    # Slightly cheaper for the common widths, rising with width so ties break
+    # toward the smallest width that still fits every example.
+    **{f"zpad{w}": 2.4 + 0.1 * w for w in range(2, 9)},
 }
 
 
@@ -203,7 +229,7 @@ def _substr_atom(a, b, tname, tcost) -> Atom:
 
 # Transform whitelist ordered roughly by likelihood.
 _TFORMS = ["", "strip", "lower", "upper", "cap", "title", "first", "First",
-           "group,", "group_", "group."]
+           "group,", "group_", "group."] + [f"zpad{w}" for w in range(2, 9)]
 
 
 def build_atoms(inputs: list[str], use_slices: bool = True) -> list[Atom]:

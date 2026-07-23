@@ -143,6 +143,27 @@ picks the separator from your example — give it `1000000 => 1 000 000` and it
 groups with spaces; and it works on a number buried in text, e.g.
 `Total: 1234567 units => 1,234,567`.
 
+**Zero-pad IDs to a fixed width** (again, one example is enough)
+
+```console
+$ printf '7\n42\n1000\n' | exform -e '7 => 007'
+007
+042
+1000
+```
+
+exform infers `line.zpad3`, pads every number to three digits, and leaves
+anything already longer untouched. Padding a number buried in a filename works
+too — give two examples so exform keeps the surrounding text as constant glue:
+
+```console
+$ printf 'img_7.png\nimg_42.png\nimg_123.png\n' | \
+    exform -e 'img_7.png => img_0007.png' -e 'img_42.png => img_0042.png' -q
+img_0007.png
+img_0042.png
+img_0123.png
+```
+
 ### Fill mode — the Flash Fill workflow
 
 Sometimes writing `IN => OUT` on the command line is awkward (quoting, long
