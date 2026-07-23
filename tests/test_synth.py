@@ -191,3 +191,34 @@ def test_prefix_constant_not_flagged_when_absent_from_input():
     # legitimate and must not be flagged.
     prog = synthesize([("1", "item 1"), ("2", "item 2")])
     assert prog.memorized_literals(["1", "2"]) == []
+
+
+def test_thousands_grouping_comma():
+    prog, out = infer_apply(
+        [("1234567", "1,234,567"), ("89012", "89,012")],
+        ["42", "1000", "9999999"],
+    )
+    assert out == ["42", "1,000", "9,999,999"]
+
+
+def test_thousands_grouping_space_si():
+    prog, out = infer_apply(
+        [("1000000", "1 000 000"), ("2500", "2 500")],
+        ["12345"],
+    )
+    assert out == ["12 345"]
+
+
+def test_thousands_grouping_from_embedded_number():
+    prog, out = infer_apply(
+        [("Total: 1234567 units", "1,234,567"), ("Total: 42 units", "42")],
+        ["Total: 9876 units"],
+    )
+    assert out == ["9,876"]
+
+
+def test_grouping_not_flagged_as_memorized_single_example():
+    # A single example is enough to infer grouping; nothing is memorised.
+    prog = synthesize([("1234567", "1,234,567")])
+    assert prog.memorized_literals(["1234567"]) == []
+    assert prog.apply("89012") == "89,012"

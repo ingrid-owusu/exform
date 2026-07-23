@@ -129,6 +129,20 @@ $ printf '(415) 555-1234\n(212) 999-0000\n' | exform \
 2129990000
 ```
 
+**Add thousands separators** (like spreadsheet number formatting — one example is enough)
+
+```console
+$ printf '1234567\n89012\n42\n' | exform -e '1234567 => 1,234,567'
+1,234,567
+89,012
+42
+```
+
+exform infers `line.group,` and grouping generalises to every line. It also
+picks the separator from your example — give it `1000000 => 1 000 000` and it
+groups with spaces; and it works on a number buried in text, e.g.
+`Total: 1234567 units => 1,234,567`.
+
 ### Fill mode — the Flash Fill workflow
 
 Sometimes writing `IN => OUT` on the command line is awkward (quoting, long

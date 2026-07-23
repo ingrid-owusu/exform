@@ -27,6 +27,23 @@ def _title(s: str) -> str:
     return re.sub(r"[A-Za-z]+", lambda m: m.group(0).capitalize(), s)
 
 
+_NUMRE = re.compile(r"\s*([+-]?)(\d+)(\.\d+)?\s*\Z")
+
+
+def _group(s: str, sep: str) -> str:
+    """Insert `sep` as a thousands separator in the integer part of a number.
+
+    Leaves non-numeric strings untouched, so on a line where the extracted
+    piece isn't a plain number it degrades to identity instead of erroring.
+    """
+    m = _NUMRE.match(s)
+    if not m:
+        return s
+    sign, intpart, frac = m.group(1), m.group(2), m.group(3) or ""
+    grouped = format(int(intpart), ",").replace(",", sep)
+    return f"{sign}{grouped}{frac}"
+
+
 TRANSFORMS: dict[str, Callable[[str], str]] = {
     "": lambda s: s,
     "lower": str.lower,
@@ -36,6 +53,12 @@ TRANSFORMS: dict[str, Callable[[str], str]] = {
     "strip": str.strip,
     "first": lambda s: s[:1],
     "First": lambda s: s[:1].upper(),
+    # Numeric thousands grouping (a la spreadsheet number formatting). The
+    # output separator is chosen from the example: comma (US), space (SI),
+    # or period (many European locales).
+    "group,": lambda s: _group(s, ","),
+    "group_": lambda s: _group(s, " "),
+    "group.": lambda s: _group(s, "."),
 }
 
 # Cost added for using a transform (identity is free, exotic ones cost more).
@@ -48,6 +71,9 @@ _TRANSFORM_COST = {
     "title": 1.5,
     "first": 1.5,
     "First": 2.0,
+    "group,": 2.5,
+    "group_": 2.8,
+    "group.": 2.8,
 }
 
 
@@ -176,7 +202,8 @@ def _substr_atom(a, b, tname, tcost) -> Atom:
 # ---------------------------------------------------------------------------
 
 # Transform whitelist ordered roughly by likelihood.
-_TFORMS = ["", "strip", "lower", "upper", "cap", "title", "first", "First"]
+_TFORMS = ["", "strip", "lower", "upper", "cap", "title", "first", "First",
+           "group,", "group_", "group."]
 
 
 def build_atoms(inputs: list[str], use_slices: bool = True) -> list[Atom]:

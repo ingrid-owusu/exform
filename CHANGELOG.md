@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased
+- **Numeric thousands grouping.** exform can now learn spreadsheet-style number
+  formatting: `-e '1234567 => 1,234,567'` infers `line.group,` and generalises
+  to every line (a single example is enough — nothing is memorised). The output
+  separator is taken from the example, so `1000000 => 1 000 000` groups with
+  spaces (SI) and periods work too; grouping also composes with extraction, e.g.
+  a number buried in text (`Total: 1234567 units => 1,234,567`).
 - **`--fill` (Flash Fill mode).** Take a two-column file (`input<TAB>output`),
   fill in the output for the first row or two by hand, leave the rest blank, and
   exform completes the table — the spreadsheet Flash Fill workflow, on the
