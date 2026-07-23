@@ -164,6 +164,22 @@ img_0042.png
 img_0123.png
 ```
 
+**Slugify titles for URLs / anchors** (one example, any number of words)
+
+```console
+$ printf 'Hello World\nMy Post: Part 2\nQuick Brown Fox Jumps\n' | \
+    exform -e 'Hello World => hello-world'
+hello-world
+my-post-part-2
+quick-brown-fox-jumps
+```
+
+exform infers `line.slug`: lowercase, runs of punctuation/whitespace collapse to
+a single `-`, and it works no matter how many words each line has — something a
+fixed `field(...)` + glue program can't do. Use `.kebab` (`My Cool Title =>
+My-Cool-Title`) to keep the case, or `.snake` (`my file name => my_file_name`)
+to join words with underscores instead.
+
 ### Fill mode — the Flash Fill workflow
 
 Sometimes writing `IN => OUT` on the command line is awkward (quoting, long

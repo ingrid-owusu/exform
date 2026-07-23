@@ -1,6 +1,14 @@
 # Changelog
 
 ## Unreleased
+- **Slugify & whitespace reshaping (variable word count).** exform can now learn
+  `-e 'Hello World => hello-world'` and infers `line.slug`: lowercase, runs of
+  punctuation/whitespace collapse to a single `-`, trimmed. It generalises to
+  lines with any number of words (something a fixed `field(...)` + glue program
+  cannot do) from a single example. Also `.kebab` (whitespace -> `-`, case
+  preserved) and `.snake` (whitespace -> `_`). As a bonus, common phone-style
+  reformatting like `(555) 123-4567 => 555-123-4567` now generalises via
+  `line.slug` instead of memorising a prefix.
 - **Zero-padding to a fixed width.** exform can learn `-e '7 => 007'` and infers
   `line.zpad3`, padding integers to a fixed width and generalising (longer
   numbers pass through untouched). It composes with extraction, so

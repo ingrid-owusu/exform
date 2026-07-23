@@ -44,6 +44,23 @@ def _group(s: str, sep: str) -> str:
     return f"{sign}{grouped}{frac}"
 
 
+_SLUG_RE = re.compile(r"[^A-Za-z0-9]+")
+
+
+def _slug(s: str) -> str:
+    """Canonical URL/anchor slug: lowercase, runs of non-alphanumeric collapse
+    to a single '-', leading/trailing '-' trimmed. "Hello, World!" ->
+    "hello-world". Handles a variable number of words (unlike field+glue),
+    which is what makes slugifying with a single example possible."""
+    return _SLUG_RE.sub("-", s).strip("-").lower()
+
+
+def _ws_to(s: str, sep: str) -> str:
+    """Replace every run of whitespace with `sep` (case preserved), trimming
+    leading/trailing whitespace first. "my file name" -> "my_file_name"."""
+    return sep.join(s.split())
+
+
 _INTRE = re.compile(r"([+-]?)(\d+)\Z")
 
 
@@ -77,6 +94,10 @@ TRANSFORMS: dict[str, Callable[[str], str]] = {
     "group,": lambda s: _group(s, ","),
     "group_": lambda s: _group(s, " "),
     "group.": lambda s: _group(s, "."),
+    # Whole-string reshaping that handles a variable number of words.
+    "slug": _slug,
+    "kebab": lambda s: _ws_to(s, "-"),
+    "snake": lambda s: _ws_to(s, "_"),
     # Zero-pad an integer to a fixed width (IDs, image0001.jpg, version parts).
     # One transform per width; the enumerative search picks the width that is
     # consistent with every example, and a second example rules out plain
@@ -97,6 +118,9 @@ _TRANSFORM_COST = {
     "group,": 2.5,
     "group_": 2.8,
     "group.": 2.8,
+    "slug": 2.2,
+    "kebab": 2.6,
+    "snake": 2.6,
     # Slightly cheaper for the common widths, rising with width so ties break
     # toward the smallest width that still fits every example.
     **{f"zpad{w}": 2.4 + 0.1 * w for w in range(2, 9)},
@@ -229,7 +253,8 @@ def _substr_atom(a, b, tname, tcost) -> Atom:
 
 # Transform whitelist ordered roughly by likelihood.
 _TFORMS = ["", "strip", "lower", "upper", "cap", "title", "first", "First",
-           "group,", "group_", "group."] + [f"zpad{w}" for w in range(2, 9)]
+           "group,", "group_", "group.", "slug", "kebab", "snake"] \
+          + [f"zpad{w}" for w in range(2, 9)]
 
 
 def build_atoms(inputs: list[str], use_slices: bool = True) -> list[Atom]:

@@ -163,12 +163,13 @@ def test_key_value_equals_delimiter():
 
 
 def test_memorized_literal_detected():
-    # A single phone example is ambiguous: the '555' prefix could be a constant
-    # or come from the input. exform picks a program that hardcodes it, and
-    # memorized_literals() must surface that so the CLI can warn.
-    prog = synthesize([("(555) 123-4567", "555-123-4567")])
-    memo = prog.memorized_literals(["(555) 123-4567"])
-    assert "555" in memo
+    # A single "Last, First" name-flip example is ambiguous: the first name
+    # could be a constant or come from the input. exform picks a program that
+    # hardcodes it, and memorized_literals() must surface that so the CLI can
+    # warn (a second example resolves it -- see the test below).
+    prog = synthesize([("John Smith", "Smith, John")])
+    memo = prog.memorized_literals(["John Smith"])
+    assert "John" in memo
 
 
 def test_generalising_program_has_no_memorized_literals():
@@ -244,3 +245,34 @@ def test_zero_pad_not_flagged_memorized():
     # zpad from a single example must not be flagged as memorised literal glue.
     prog = synthesize([("7", "007")])
     assert prog.memorized_literals(["7"]) == []
+
+
+def test_slug_single_example():
+    # Slugify a title from ONE example, variable word count on later lines.
+    prog = synthesize([("Hello World", "hello-world")])
+    assert prog.explain() == "line.slug"
+    assert prog.apply("Good Morning Sun") == "good-morning-sun"
+    assert prog.apply("Quick Brown Fox Jumps") == "quick-brown-fox-jumps"
+
+
+def test_slug_strips_punctuation():
+    prog = synthesize([("Hello, World!", "hello-world")])
+    assert prog.apply("My Post: Part 2") == "my-post-part-2"
+
+
+def test_snake_space_to_underscore_variable_words():
+    # field+glue cannot do this (word count varies); the snake transform can.
+    prog = synthesize([("my file name", "my_file_name")])
+    assert prog.apply("another doc here now") == "another_doc_here_now"
+
+
+def test_kebab_preserves_case():
+    prog = synthesize([("My Cool Title", "My-Cool-Title")])
+    assert prog.apply("Another Great Post Here") == "Another-Great-Post-Here"
+
+
+def test_plain_lowercase_prefers_lower_not_slug():
+    # A single lowercase-only example must stay line.lower (cheaper), so a
+    # one-word input isn't hijacked by the slug transform.
+    prog = synthesize([("HELLO", "hello")])
+    assert prog.explain() == "line.lower"
