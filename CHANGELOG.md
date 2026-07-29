@@ -1,6 +1,16 @@
 # Changelog
 
 ## Unreleased
+- **Acronyms & initials over a variable number of words.** exform can now learn
+  `-e 'John Ronald Tolkien => JRT'` (`line.acronym`) or the dotted
+  `=> J.R.R.` (`line.acronym.`) style, folding the leading letter of every word
+  regardless of how many there are — so `Ada King Lovelace => AKL` and single
+  names like `Cher => C` both come out right. A fixed `field(...)` program that
+  happened to fit two same-length examples used to mis-fire on a third of a
+  different length; the acronym fold generalises instead.
+- **Username / email-local synthesis.** A new lower-cased leading-initial
+  transform (`first_`) makes the classic `John Smith => jsmith` scheme
+  (`line.first_ + field(ws,1).lower`) and `=> jsmith@corp.com` reachable.
 - **PyPI publishing workflow.** A GitHub Actions `publish.yml` builds and
   releases to PyPI via trusted publishing (OIDC, no stored token) whenever a
   GitHub release is published, so `pipx install exform` tracks each release.

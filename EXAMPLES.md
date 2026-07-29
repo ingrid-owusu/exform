@@ -50,6 +50,28 @@ G.H.
 A.T.
 ```
 
+**Acronym / initials that generalize to *any* number of words** &nbsp;·&nbsp; `line.acronym`
+
+Give examples of different lengths and exform folds over every word instead of
+memorising a fixed number of fields:
+
+```console
+$ printf 'Ada King Lovelace\nCher\nJohn Ronald Reuel Tolkien\n' | exform \
+    -e 'John Ronald Tolkien => JRT' -e 'Alan Turing => AT' -q
+AKL
+C
+JRRT
+```
+
+**Corporate username from a name** &nbsp;·&nbsp; `line.first_ + field(ws,1).lower`
+
+```console
+$ printf 'Grace Hopper\nAlan Turing\n' | exform \
+    -e 'John Smith => jsmith' -e 'Ada Lovelace => alovelace' -q
+ghopper
+aturing
+```
+
 **Just the first name** &nbsp;·&nbsp; `field(ws,0)` &nbsp;·&nbsp; **just the last** &nbsp;·&nbsp; `field(ws,-1)`
 
 ```console

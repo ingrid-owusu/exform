@@ -276,3 +276,31 @@ def test_plain_lowercase_prefers_lower_not_slug():
     # one-word input isn't hijacked by the slug transform.
     prog = synthesize([("HELLO", "hello")])
     assert prog.explain() == "line.lower"
+
+
+def test_acronym_variable_length():
+    # Initials over a *variable* number of words must generalize, not hardcode
+    # a per-word field program that breaks at a different length.
+    prog, out = infer_apply(
+        [("John Ronald Tolkien", "JRT"), ("Alan Turing", "AT")],
+        ["Ada King Lovelace", "Cher"],
+    )
+    assert out == ["AKL", "C"]
+
+
+def test_acronym_dotted():
+    prog, out = infer_apply(
+        [("John Fitzgerald Kennedy", "J.F.K."),
+         ("Franklin Delano Roosevelt", "F.D.R.")],
+        ["Grace Brewster Hopper"],
+    )
+    assert out == ["G.B.H."]
+
+
+def test_username_from_name():
+    # first-initial (lower) + last name (lower): classic corp username scheme.
+    prog, out = infer_apply(
+        [("John Smith", "jsmith"), ("Ada Lovelace", "alovelace")],
+        ["Grace Hopper"],
+    )
+    assert out == ["ghopper"]

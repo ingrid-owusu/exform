@@ -61,6 +61,19 @@ def _ws_to(s: str, sep: str) -> str:
     return sep.join(s.split())
 
 
+def _acronym(s: str, sep: str = "") -> str:
+    """First letter of each whitespace-delimited word, upper-cased, joined by
+    `sep`. Handles a *variable* number of words, so "Ada King Lovelace" ->
+    "AKL" generalizes correctly from examples of different lengths (unlike a
+    fixed field+glue program). With sep="." gives "A.K.L.". Words that start
+    with a non-letter contribute their first character as-is."""
+    parts = [w[0] for w in s.split() if w]
+    joined = sep.join(parts).upper()
+    if sep and parts:
+        joined += sep
+    return joined
+
+
 _INTRE = re.compile(r"([+-]?)(\d+)\Z")
 
 
@@ -88,6 +101,9 @@ TRANSFORMS: dict[str, Callable[[str], str]] = {
     "strip": str.strip,
     "first": lambda s: s[:1],
     "First": lambda s: s[:1].upper(),
+    # Lower-cased leading initial, the building block of username/email-local
+    # synthesis: "John" -> "j" so "first.jsmith@corp.com" is reachable.
+    "first_": lambda s: s[:1].lower(),
     # Numeric thousands grouping (a la spreadsheet number formatting). The
     # output separator is chosen from the example: comma (US), space (SI),
     # or period (many European locales).
@@ -98,6 +114,10 @@ TRANSFORMS: dict[str, Callable[[str], str]] = {
     "slug": _slug,
     "kebab": lambda s: _ws_to(s, "-"),
     "snake": lambda s: _ws_to(s, "_"),
+    # Acronym / initials over a variable number of words. Plain "AKL" and the
+    # dotted "A.K.L." style are both common (names, org abbreviations).
+    "acronym": lambda s: _acronym(s, ""),
+    "acronym.": lambda s: _acronym(s, "."),
     # Zero-pad an integer to a fixed width (IDs, image0001.jpg, version parts).
     # One transform per width; the enumerative search picks the width that is
     # consistent with every example, and a second example rules out plain
@@ -115,12 +135,15 @@ _TRANSFORM_COST = {
     "title": 1.5,
     "first": 1.5,
     "First": 2.0,
+    "first_": 2.0,
     "group,": 2.5,
     "group_": 2.8,
     "group.": 2.8,
     "slug": 2.2,
     "kebab": 2.6,
     "snake": 2.6,
+    "acronym": 2.7,
+    "acronym.": 3.0,
     # Slightly cheaper for the common widths, rising with width so ties break
     # toward the smallest width that still fits every example.
     **{f"zpad{w}": 2.4 + 0.1 * w for w in range(2, 9)},
@@ -253,8 +276,13 @@ def _substr_atom(a, b, tname, tcost) -> Atom:
 
 # Transform whitelist ordered roughly by likelihood.
 _TFORMS = ["", "strip", "lower", "upper", "cap", "title", "first", "First",
-           "group,", "group_", "group.", "slug", "kebab", "snake"] \
+           "first_", "group,", "group_", "group.", "slug", "kebab", "snake"] \
           + [f"zpad{w}" for w in range(2, 9)]
+
+# Transforms that only make sense applied to a whole multi-word string (they
+# fold over every word), so they are enumerated only as whole-line atoms — not
+# on single fields, where they'd just duplicate cheaper char ops.
+_WHOLE_ONLY_TFORMS = ["acronym", "acronym."]
 
 
 def build_atoms(inputs: list[str], use_slices: bool = True) -> list[Atom]:
@@ -273,6 +301,8 @@ def build_atoms(inputs: list[str], use_slices: bool = True) -> list[Atom]:
                 atoms.append(_field_atom(delim, dlabel, dcost, idx, tname, _TRANSFORM_COST[tname]))
 
     for tname in _TFORMS:
+        atoms.append(_whole_atom(tname, _TRANSFORM_COST[tname]))
+    for tname in _WHOLE_ONLY_TFORMS:
         atoms.append(_whole_atom(tname, _TRANSFORM_COST[tname]))
 
     for pattern, plabel, pcost in _REGEXES:
