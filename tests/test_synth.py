@@ -304,3 +304,30 @@ def test_username_from_name():
         ["Grace Hopper"],
     )
     assert out == ["ghopper"]
+
+
+def test_snake_to_camel_variable_length():
+    # snake_case -> camelCase must fold over a *variable* number of words, so a
+    # 3-word input generalizes from 2-word / 2-word examples of differing width.
+    prog, out = infer_apply(
+        [("my_var_name", "myVarName"), ("foo_bar", "fooBar")],
+        ["hello_world_x", "id"],
+    )
+    assert out == ["helloWorldX", "id"]
+
+
+def test_snake_to_pascal():
+    prog, out = infer_apply(
+        [("my_var_name", "MyVarName"), ("foo_bar", "FooBar")],
+        ["hello_world_x"],
+    )
+    assert out == ["HelloWorldX"]
+
+
+def test_camel_accepts_any_input_convention():
+    # kebab-case and spaced input reach camelCase too (robust word splitter).
+    prog, out = infer_apply(
+        [("my-var-name", "myVarName"), ("a-b", "aB")],
+        ["foo-bar-baz"],
+    )
+    assert out == ["fooBarBaz"]

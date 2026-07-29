@@ -74,6 +74,42 @@ def _acronym(s: str, sep: str = "") -> str:
     return joined
 
 
+_WORD_SEP_RE = re.compile(r"[^A-Za-z0-9]+")
+# Split a chunk into sub-words on camelCase / PascalCase / ACRONYM boundaries.
+_CAMEL_RE = re.compile(r"[A-Z]+(?=[A-Z][a-z])|[A-Z]?[a-z0-9]+|[A-Z]+|[0-9]+")
+
+
+def _words(s: str) -> list[str]:
+    """Split an identifier or phrase into its component words, regardless of
+    the naming convention used. Handles separators (``_ - . space``) *and*
+    camelCase / PascalCase / ACRONYM boundaries, so "my_var_name",
+    "my-var-name", "myVarName" and "My Var Name" all yield
+    ``["my", "var", "name"]`` (case preserved)."""
+    out: list[str] = []
+    for chunk in _WORD_SEP_RE.split(s):
+        if chunk:
+            out.extend(m.group(0) for m in _CAMEL_RE.finditer(chunk))
+    return out
+
+
+def _camel(s: str, upper_first: bool) -> str:
+    """Join the words of `s` in camelCase (``upper_first=False``) or
+    PascalCase (``upper_first=True``). Folds over a *variable* number of
+    words, so "my_var_name" -> "myVarName" generalizes from examples of
+    different word counts. Degrades to the original string if no words are
+    found (e.g. an all-symbol line) instead of erroring."""
+    words = _words(s)
+    if not words:
+        return s
+    parts = []
+    for i, w in enumerate(words):
+        if i == 0 and not upper_first:
+            parts.append(w.lower())
+        else:
+            parts.append(w[:1].upper() + w[1:].lower())
+    return "".join(parts)
+
+
 _INTRE = re.compile(r"([+-]?)(\d+)\Z")
 
 
@@ -118,6 +154,11 @@ TRANSFORMS: dict[str, Callable[[str], str]] = {
     # dotted "A.K.L." style are both common (names, org abbreviations).
     "acronym": lambda s: _acronym(s, ""),
     "acronym.": lambda s: _acronym(s, "."),
+    # Case-convention conversion over a variable number of words, robust to the
+    # input style (snake_case / kebab-case / spaced / camelCase all accepted):
+    # "my_var_name" -> "myVarName" (camel) or "MyVarName" (pascal).
+    "camel": lambda s: _camel(s, False),
+    "pascal": lambda s: _camel(s, True),
     # Zero-pad an integer to a fixed width (IDs, image0001.jpg, version parts).
     # One transform per width; the enumerative search picks the width that is
     # consistent with every example, and a second example rules out plain
@@ -144,6 +185,8 @@ _TRANSFORM_COST = {
     "snake": 2.6,
     "acronym": 2.7,
     "acronym.": 3.0,
+    "camel": 2.8,
+    "pascal": 2.8,
     # Slightly cheaper for the common widths, rising with width so ties break
     # toward the smallest width that still fits every example.
     **{f"zpad{w}": 2.4 + 0.1 * w for w in range(2, 9)},
@@ -282,7 +325,7 @@ _TFORMS = ["", "strip", "lower", "upper", "cap", "title", "first", "First",
 # Transforms that only make sense applied to a whole multi-word string (they
 # fold over every word), so they are enumerated only as whole-line atoms — not
 # on single fields, where they'd just duplicate cheaper char ops.
-_WHOLE_ONLY_TFORMS = ["acronym", "acronym."]
+_WHOLE_ONLY_TFORMS = ["acronym", "acronym.", "camel", "pascal"]
 
 
 def build_atoms(inputs: list[str], use_slices: bool = True) -> list[Atom]:

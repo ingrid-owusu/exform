@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased
+- **Case-convention conversion (`camelCase` / `PascalCase`).** exform can now
+  learn `-e 'my_var_name => myVarName'` (`line.camel`) and the `=> MyVarName`
+  (`line.pascal`) style, folding over a *variable* number of words so
+  `hello_world_x => helloWorldX` generalises from shorter examples. The word
+  splitter accepts `snake_case`, `kebab-case`, spaced and `camelCase` input
+  alike, so any naming style can be reshaped into another.
 - **Acronyms & initials over a variable number of words.** exform can now learn
   `-e 'John Ronald Tolkien => JRT'` (`line.acronym`) or the dotted
   `=> J.R.R.` (`line.acronym.`) style, folding the leading letter of every word

@@ -150,6 +150,21 @@ my-var-name
 foo-bar
 ```
 
+**snake_case → camelCase** &nbsp;·&nbsp; `line.camel` &nbsp;·&nbsp; folds over any number of words
+
+Two examples of different word counts remove ambiguity; exform reshapes each
+word rather than memorising a fixed number of fields (`line.pascal` gives
+`MyVarName`). The word splitter accepts `snake_case`, `kebab-case`, spaced and
+`camelCase` input alike.
+
+```console
+$ printf 'my_var_name\nhttp_request_id\nx\n' | exform \
+    -e 'my_var_name => myVarName' -e 'foo_bar => fooBar' -q
+myVarName
+httpRequestId
+x
+```
+
 ## Web & files
 
 **Domain from a URL** &nbsp;·&nbsp; `field(/,2)`
