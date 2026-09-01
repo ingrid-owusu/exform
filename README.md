@@ -1,5 +1,9 @@
 # exform
 
+[![PyPI](https://img.shields.io/pypi/v/exform.svg)](https://pypi.org/project/exform/)
+[![Python](https://img.shields.io/pypi/pyversions/exform.svg)](https://pypi.org/project/exform/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **Reshape text by example.** Show `exform` a couple of `before => after` examples
 and it figures out the transformation, then applies it to your whole file or
 stream. It's *FlashFill for the terminal* — but **deterministic, offline, and
@@ -51,21 +55,20 @@ No black box. No network. Milliseconds, not seconds.
 ## Install
 
 ```bash
-# Install the latest release straight from GitHub (works today):
-pipx install git+https://github.com/ingrid-owusu/exform.git
-# or with plain pip:
-pip install git+https://github.com/ingrid-owusu/exform.git
+# From PyPI (recommended):
+pipx install exform
+# or run it once without installing:
+uvx exform --help
+# or plain pip:
+pip install exform
 ```
 
-Prefer a pinned wheel? Grab it from the
-[latest release](https://github.com/ingrid-owusu/exform/releases/latest):
+Prefer to install straight from source? Both of these work too:
 
 ```bash
+pipx install git+https://github.com/ingrid-owusu/exform.git
 pip install https://github.com/ingrid-owusu/exform/releases/download/v0.1.0/exform-0.1.0-py3-none-any.whl
 ```
-
-> **PyPI** (`pipx install exform`, `uvx exform`) is coming soon — this README
-> will switch to it once the package is published.
 
 exform is pure Python (3.8+) with **zero dependencies**.
 
