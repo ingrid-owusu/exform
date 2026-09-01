@@ -1,5 +1,6 @@
 # exform
 
+[![CI](https://github.com/ingrid-owusu/exform/actions/workflows/ci.yml/badge.svg)](https://github.com/ingrid-owusu/exform/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/exform.svg)](https://pypi.org/project/exform/)
 [![Python](https://img.shields.io/pypi/pyversions/exform.svg)](https://pypi.org/project/exform/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
