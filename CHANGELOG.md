@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 - 2026-09-01
 - **Case-convention conversion (`camelCase` / `PascalCase`).** exform can now
   learn `-e 'my_var_name => myVarName'` (`line.camel`) and the `=> MyVarName`
   (`line.pascal`) style, folding over a *variable* number of words so

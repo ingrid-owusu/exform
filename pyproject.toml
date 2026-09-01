@@ -26,9 +26,9 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/INGRID_GH/exform"
-Repository = "https://github.com/INGRID_GH/exform"
-Issues = "https://github.com/INGRID_GH/exform/issues"
+Homepage = "https://github.com/ingrid-owusu/exform"
+Repository = "https://github.com/ingrid-owusu/exform"
+Issues = "https://github.com/ingrid-owusu/exform/issues"
 
 [project.scripts]
 exform = "exform.cli:main"
