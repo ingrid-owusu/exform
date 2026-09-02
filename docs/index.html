@@ -258,7 +258,7 @@ async function boot(){
     try {
       await micropip.install("exform");           // latest from PyPI
     } catch (e) {
-      await micropip.install("./exform-0.1.0-py3-none-any.whl");  // offline fallback
+      await micropip.install("./exform-0.2.0-py3-none-any.whl");  // offline fallback
     }
     pyodide.runPython("import exform");
     statusEl.textContent = "Ready — runs entirely in your browser. Edit examples or pick a preset above.";
