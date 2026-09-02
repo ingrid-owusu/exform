@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "exform"
-version = "0.1.0"
+version = "0.2.0"
 description = "Reshape text by example — deterministic, offline, no regex, no LLM."
 readme = "README.md"
 requires-python = ">=3.8"

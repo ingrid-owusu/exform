@@ -227,12 +227,46 @@ completed. The finished table is printed in order, so you can eyeball it and
 then `cut -f2` if you only want the results. Use `--col-sep` for a different
 column delimiter (e.g. `--col-sep ,` for CSV).
 
+### In-line mode — sed-by-example
+
+By default exform rewrites the **whole** line. `--in-line` instead changes only
+the substring that differs between your example's input and output, leaving the
+rest of every line untouched — the job you'd normally reach for `sed` to do, but
+without writing the pattern. exform strips the shared context from your example,
+learns the inner change, and generalises the matched text into a locator so it
+finds the same kind of token on lines it has never seen.
+
+```console
+$ cat build.log
+commit on 2021-03-05 by ana
+deploy  on 1999-12-31 by ***
+skipped (no date)
+
+$ exform --in-line -e 'commit on 2021-03-05 by ana => commit on 2021/03/05 by ana' build.log
+commit on 2021/03/05 by ana
+deploy  on 1999/12/31 by ***
+skipped (no date)
+```
+
+Only the date changed; everything else is byte-for-byte preserved, and lines
+with no match pass through unchanged. Give a second example if one is ambiguous,
+and use `--all` to rewrite **every** match on a line instead of just the first:
+
+```console
+$ printf 'level=info here\nlevel=warn there\n' \
+    | exform --in-line -e 'level=info x => level=INFO x' -e 'level=warn y => level=WARN y'
+level=INFO here
+level=WARN there
+```
+
 ### Handy flags
 
 | flag | meaning |
 |------|---------|
 | `-e, --example 'IN => OUT'` | an example (repeatable) |
 | `-E, --examples-file FILE` | read examples from a file, one per line |
+| `--in-line` | sed-by-example: change only the differing substring in each line |
+| `--all` | in `--in-line` mode, rewrite every match on a line (default: first) |
 | `--fill` | Flash Fill mode: complete a 2-column `input<TAB>output` table |
 | `--col-sep SEP` | column separator for `--fill` (default: TAB) |
 | `--explain` | print the inferred program to stderr |

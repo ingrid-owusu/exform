@@ -285,6 +285,44 @@ $ printf 'a,1\nb,2\n' | exform -e 'a,1 => "a"' -e 'b,2 => "b"' -q
 "b"
 ```
 
+## In-line edits (`--in-line`) — change only what differs
+
+These leave the rest of each line untouched, like `sed` but by example.
+
+**Reformat a date inside a line**
+
+```console
+$ printf 'commit 2021-03-05 ok\npush 1999-12-31 x\n' \
+    | exform --in-line -e 'commit 2021-03-05 ok => commit 2021/03/05 ok'
+commit 2021/03/05 ok
+push 1999/12/31 x
+```
+
+**Uppercase a keyed value, nothing else**
+
+```console
+$ printf 'level=info a\nlevel=warn b\n' \
+    | exform --in-line -e 'level=info a => level=INFO a' -e 'level=warn b => level=WARN b'
+level=INFO a
+level=WARN b
+```
+
+**Wrap a word in brackets**
+
+```console
+$ printf 'see foo here\nsee bar there\n' \
+    | exform --in-line -e 'see foo here => see <foo> here' -e 'see bar there => see <bar> there'
+see <foo> here
+see <bar> there
+```
+
+**Rewrite every match on a line (`--all`)**
+
+```console
+$ printf 'a 1 2 3 b\n' | exform --in-line --all -e 'a 1 b => a [1] b'
+a [1] [2] [3] b
+```
+
 ---
 
 Got a recipe exform can't learn, or one worth adding? Open an issue — the

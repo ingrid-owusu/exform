@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.0 - 2026-09-02
+- **In-line mode (`--in-line`) — sed-by-example.** exform can now change only
+  the substring that differs between an example's input and output, leaving the
+  rest of each line untouched — the job people reach for `sed` to do, but
+  without writing the pattern. It strips the shared context from your example,
+  synthesises the inner change with the normal engine, and generalises the
+  matched text into a locator (e.g. `\d+-\d+-\d+`) so it finds the same kind of
+  token on unseen lines. Lines with no match pass through unchanged. Delimiter
+  boundaries around the changed span become lookbehind/lookahead anchors so the
+  locator can't latch onto an earlier run of the same character class. `--all`
+  rewrites every match on a line instead of just the first. The assembled rule
+  is verified to reproduce every example exactly before it runs, so ambiguous
+  or non-substring changes (e.g. whole-token phone reformatting) are declined
+  with a clear message rather than producing wrong output.
+
 ## 0.1.0 - 2026-09-01
 - **Case-convention conversion (`camelCase` / `PascalCase`).** exform can now
   learn `-e 'my_var_name => myVarName'` (`line.camel`) and the `=> MyVarName`

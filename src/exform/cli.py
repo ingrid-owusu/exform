@@ -107,6 +107,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="only infer and print the program; do not read/transform input",
     )
     p.add_argument(
+        "--in-line",
+        "--inline",
+        dest="in_line",
+        action="store_true",
+        help="sed-by-example: change only the substring that differs between "
+        "your example's input and output, leaving the rest of each line intact "
+        "(e.g. reformat the date inside a log line and nothing else)",
+    )
+    p.add_argument(
+        "--all",
+        action="store_true",
+        help="in --in-line mode, rewrite every match on a line (default: only "
+        "the first)",
+    )
+    p.add_argument(
         "--no-slices",
         action="store_true",
         help="disable positional slice atoms (faster, more general)",
@@ -219,6 +234,55 @@ def _run_fill(args) -> int:
     return 0
 
 
+def _run_inline(args, examples) -> int:
+    from .inline import InlineProgram, infer_inline, memorized_inner_literals
+
+    try:
+        program: InlineProgram = infer_inline(
+            examples, use_slices=not args.no_slices, replace_all=args.all
+        )
+    except SynthesisError as exc:
+        sys.stderr.write(f"exform: {exc}\n")
+        return 1
+
+    if args.explain or args.dry_run:
+        sys.stderr.write(f"program: {program.explain()}\n")
+
+    if not args.quiet:
+        memo = memorized_inner_literals(program, (i for i, _ in examples))
+        if memo:
+            shown = ", ".join(repr(m) for m in memo[:3])
+            sys.stderr.write(
+                "exform: warning: the inferred in-line rule hardcodes "
+                + shown + " copied from your example, so it will likely be "
+                "wrong on other lines. Add another varied example so exform "
+                "can generalise (pass --quiet to silence).\n"
+            )
+
+    if args.dry_run:
+        return 0
+
+    out = sys.stdout
+    for line in _iter_input(args.file):
+        result = program.apply(line)
+        if result is None:
+            # No match on this line -> apply the --on-error policy. For in-line
+            # mode "no match" is the common, benign case, so 'keep' is sensible.
+            if args.on_error in ("keep",):
+                result = line
+            elif args.on_error == "empty":
+                result = ""
+            elif args.on_error == "skip":
+                continue
+            else:  # fail
+                sys.stderr.write(
+                    f"exform: no match to transform on line: {line!r}\n"
+                )
+                return 1
+        out.write(result + "\n")
+    return 0
+
+
 def run(argv: Optional[list[str]] = None) -> int:
     args = build_parser().parse_args(argv)
 
@@ -234,6 +298,9 @@ def run(argv: Optional[list[str]] = None) -> int:
     if not examples:
         sys.stderr.write("exform: no examples given (use -e 'IN => OUT')\n")
         return 2
+
+    if args.in_line:
+        return _run_inline(args, examples)
 
     try:
         program: Program = synthesize(examples, use_slices=not args.no_slices)
