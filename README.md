@@ -5,6 +5,8 @@
 [![Python](https://img.shields.io/pypi/pyversions/exform.svg)](https://pypi.org/project/exform/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+### ▶ [Try it in your browser, no install](https://ingrid-owusu.github.io/exform/) — the full engine runs client-side via Pyodide.
+
 **Reshape text by example.** Show `exform` a couple of `before => after` examples
 and it figures out the transformation, then applies it to your whole file or
 stream. It's *FlashFill for the terminal* — but **deterministic, offline, and

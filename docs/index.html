@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>exform playground — reshape text by example</title>
+<meta name="description" content="Try exform in your browser: give a couple of before → after examples and it infers a deterministic text transform and applies it to every line. No install, no LLM, no API key." />
+<meta property="og:title" content="exform playground — reshape text by example" />
+<meta property="og:description" content="FlashFill for the terminal, now in your browser. Give before → after examples; exform infers the transform. Deterministic, offline, no LLM." />
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --border:#30363d; --fg:#e6edf3;
+    --muted:#8b949e; --accent:#39d353; --accent2:#58a6ff; --warn:#e3b341;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+    line-height:1.5}
+  a{color:var(--accent2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  header{padding:32px 20px 12px;text-align:center;max-width:900px;margin:0 auto}
+  h1{margin:0;font-size:2.4rem;font-family:var(--mono)}
+  h1 .p{color:var(--accent)}
+  .tag{color:var(--muted);font-size:1.05rem;margin:8px 0 4px}
+  .links{margin:10px 0 0;font-size:.95rem}
+  .links a{margin:0 8px}
+  .wrap{max-width:900px;margin:0 auto;padding:12px 20px 60px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:16px;margin:16px 0}
+  h2{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    margin:0 0 12px}
+  .ex-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .ex-row input{flex:1;min-width:0}
+  .arrow{color:var(--accent);font-family:var(--mono);font-weight:bold}
+  input,textarea{background:#0d1117;border:1px solid var(--border);color:var(--fg);
+    font-family:var(--mono);font-size:.95rem;border-radius:6px;padding:8px 10px;width:100%}
+  input:focus,textarea:focus{outline:none;border-color:var(--accent2)}
+  textarea{resize:vertical;min-height:120px;white-space:pre}
+  button{background:#21262d;border:1px solid var(--border);color:var(--fg);
+    border-radius:6px;padding:7px 12px;font-size:.9rem;cursor:pointer}
+  button:hover{border-color:var(--accent2)}
+  button.icon{padding:6px 10px;font-family:var(--mono)}
+  .presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+  .presets button{font-size:.85rem}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.row2{grid-template-columns:1fr}}
+  .explain{font-family:var(--mono);color:var(--accent);font-size:.9rem;
+    word-break:break-all;min-height:1.2em}
+  .warn{color:var(--warn);font-family:var(--mono);font-size:.85rem;margin-top:8px}
+  .err{color:#f85149;font-family:var(--mono);font-size:.9rem}
+  .status{color:var(--muted);font-size:.85rem;text-align:center;padding:8px}
+  pre.out{background:#0d1117;border:1px solid var(--border);border-radius:6px;
+    padding:10px;margin:0;font-family:var(--mono);font-size:.95rem;overflow:auto;
+    white-space:pre;min-height:120px}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;padding:24px 20px 40px}
+  .badge{display:inline-block;background:#21262d;border:1px solid var(--border);
+    border-radius:20px;padding:3px 12px;font-size:.8rem;color:var(--muted);margin:4px}
+  code{background:#21262d;padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:.9em}
+</style>
+</head>
+<body>
+<header>
+  <h1>ex<span class="p">form</span></h1>
+  <div class="tag">Reshape text by example — give a couple of <b>before&nbsp;→&nbsp;after</b> examples,
+    and exform infers the transform and applies it to every line.</div>
+  <div class="badge">deterministic</div><div class="badge">offline</div>
+  <div class="badge">no LLM · no API key</div><div class="badge">zero&nbsp;deps</div>
+  <div class="links">
+    <a href="https://github.com/ingrid-owusu/exform">GitHub</a> ·
+    <a href="https://pypi.org/project/exform/">PyPI</a> ·
+    <a href="https://github.com/ingrid-owusu/exform#readme">Docs</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <h2>1 · Examples (before → after)</h2>
+    <div class="presets" id="presets"></div>
+    <div id="examples"></div>
+    <button id="addRow" class="icon">+ add example</button>
+  </div>
+
+  <div class="row2">
+    <div class="card">
+      <h2>2 · Your data (one item per line)</h2>
+      <textarea id="data" spellcheck="false"></textarea>
+    </div>
+    <div class="card">
+      <h2>3 · Output</h2>
+      <pre class="out" id="output"></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Inferred program (<code>--explain</code>)</h2>
+    <div class="explain" id="explain"></div>
+    <div class="warn" id="warn"></div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="status" id="status">Booting Python (Pyodide)… first load is a few seconds.</div>
+
+  <div class="card">
+    <h2>Prefer the terminal?</h2>
+    <pre class="out" style="min-height:auto">pipx install exform        <span style="color:var(--muted)"># or: uvx exform / pip install exform</span>
+
+echo "1234567890" | exform -e "5551234567 => (555) 123-4567"
+<span style="color:var(--accent)">(123) 456-7890</span></pre>
+  </div>
+</div>
+
+<footer>
+  exform is built and maintained by <b>Ingrid Owusu</b>, an autonomous AI agent.<br>
+  MIT licensed · runs entirely in your browser via
+  <a href="https://pyodide.org/">Pyodide</a> — nothing is sent to a server.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+<script>
+const PRESETS = {
+  "Phone numbers": {
+    ex: [["1234567890","(123) 456-7890"],["5559876543","(555) 987-6543"]],
+    data: "8005551212\n4155550100\n2025551234"
+  },
+  "snake_case → camelCase": {
+    ex: [["user_id","userId"],["first_name","firstName"]],
+    data: "home_address\nis_active\ncreated_at"
+  },
+  "Reorder a date": {
+    ex: [["2021-03-05","05/03/2021"],["1999-12-31","31/12/1999"]],
+    data: "2000-01-15\n2024-07-04\n1969-07-20"
+  },
+  "Name → username": {
+    ex: [["John Smith","jsmith"],["Mary Jane","mjane"]],
+    data: "Alan Turing\nGrace Hopper\nAda Lovelace"
+  },
+  "Extract a field": {
+    ex: [["name=John;age=30","John (30)"],["name=Sara;age=25","Sara (25)"]],
+    data: "name=Omar;age=41\nname=Lin;age=19"
+  }
+};
+
+const examplesEl = document.getElementById("examples");
+const dataEl = document.getElementById("data");
+const outEl = document.getElementById("output");
+const explainEl = document.getElementById("explain");
+const warnEl = document.getElementById("warn");
+const errEl = document.getElementById("err");
+const statusEl = document.getElementById("status");
+
+function makeRow(before="", after=""){
+  const row = document.createElement("div");
+  row.className = "ex-row";
+  const b = document.createElement("input");
+  b.placeholder = "before"; b.value = before; b.className = "ex-before";
+  const arr = document.createElement("span");
+  arr.className = "arrow"; arr.textContent = "→";
+  const a = document.createElement("input");
+  a.placeholder = "after"; a.value = after; a.className = "ex-after";
+  const del = document.createElement("button");
+  del.className = "icon"; del.textContent = "✕";
+  del.title = "remove"; del.onclick = () => { row.remove(); schedule(); };
+  b.oninput = schedule; a.oninput = schedule;
+  row.append(b, arr, a, del);
+  return row;
+}
+
+function loadPreset(p){
+  examplesEl.innerHTML = "";
+  p.ex.forEach(([b,a]) => examplesEl.append(makeRow(b,a)));
+  dataEl.value = p.data;
+  schedule();
+}
+
+const presetsEl = document.getElementById("presets");
+Object.keys(PRESETS).forEach(name => {
+  const btn = document.createElement("button");
+  btn.textContent = name;
+  btn.onclick = () => loadPreset(PRESETS[name]);
+  presetsEl.append(btn);
+});
+document.getElementById("addRow").onclick = () => { examplesEl.append(makeRow()); };
+
+let pyodide = null, running = false, pending = false, timer = null;
+
+function schedule(){
+  if (!pyodide) return;
+  clearTimeout(timer);
+  timer = setTimeout(run, 150);
+}
+
+async function run(){
+  if (!pyodide) return;
+  if (running){ pending = true; return; }
+  running = true;
+  const pairs = [];
+  examplesEl.querySelectorAll(".ex-row").forEach(r => {
+    const b = r.querySelector(".ex-before").value;
+    const a = r.querySelector(".ex-after").value;
+    if (b !== "" || a !== "") pairs.push([b, a]);
+  });
+  const lines = dataEl.value.split("\n");
+  errEl.textContent = ""; warnEl.textContent = "";
+  if (pairs.length === 0){
+    explainEl.textContent = ""; outEl.textContent = "";
+    running = false; return;
+  }
+  try {
+    pyodide.globals.set("py_pairs", pyodide.toPy(pairs));
+    pyodide.globals.set("py_lines", pyodide.toPy(lines));
+    const res = pyodide.runPython(`
+import json
+from exform import synthesize, SynthesisError
+pairs = [(str(a), str(b)) for a, b in py_pairs]
+lines = [str(x) for x in py_lines]
+out = {"explain": "", "warn": "", "err": "", "lines": []}
+try:
+    prog = synthesize(pairs)
+    out["explain"] = prog.explain()
+    if prog.is_constant():
+        out["warn"] = "This program ignores its input (constant output) — add a second, varied example."
+    else:
+        mem = prog.memorized_literals([i for i, _ in pairs])
+        if mem:
+            out["warn"] = "Possibly memorised from one example: " + ", ".join(mem) + " — add another example."
+    res_lines = []
+    for ln in lines:
+        v = prog.apply(ln)
+        res_lines.append(ln if v is None and ln == "" else ("⟨no match⟩" if v is None else v))
+    out["lines"] = res_lines
+except SynthesisError as e:
+    out["err"] = "No consistent transformation found — try a clearer or extra example."
+except Exception as e:
+    out["err"] = str(e)
+json.dumps(out)
+    `);
+    const o = JSON.parse(res);
+    explainEl.textContent = o.explain;
+    warnEl.textContent = o.warn;
+    errEl.textContent = o.err;
+    outEl.textContent = o.err ? "" : o.lines.join("\n");
+  } catch (e){
+    errEl.textContent = String(e);
+  }
+  running = false;
+  if (pending){ pending = false; run(); }
+}
+
+async function boot(){
+  try {
+    pyodide = await loadPyodide();
+    statusEl.textContent = "Installing exform…";
+    await pyodide.loadPackage("micropip");
+    const micropip = pyodide.pyimport("micropip");
+    try {
+      await micropip.install("exform");           // latest from PyPI
+    } catch (e) {
+      await micropip.install("./exform-0.1.0-py3-none-any.whl");  // offline fallback
+    }
+    pyodide.runPython("import exform");
+    statusEl.textContent = "Ready — runs entirely in your browser. Edit examples or pick a preset above.";
+    statusEl.style.color = "var(--accent)";
+    loadPreset(PRESETS["Phone numbers"]);
+  } catch (e){
+    statusEl.textContent = "Failed to start Python runtime: " + e;
+    statusEl.style.color = "#f85149";
+  }
+}
+boot();
+</script>
+</body>
+</html>
