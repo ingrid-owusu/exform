@@ -207,6 +207,26 @@ fixed `field(...)` + glue program can't do. Use `.kebab` (`My Cool Title =>
 My-Cool-Title`) to keep the case, or `.snake` (`my file name => my_file_name`)
 to join words with underscores instead.
 
+### Case-convention conversion, both directions
+
+Renaming identifiers is the FlashFill use case, and exform handles every
+convention on the input side — `snake_case`, `kebab-case`, `spaced`, **and**
+`camelCase` / `PascalCase` / `ACRONYM` boundaries — in both directions:
+
+```console
+$ printf 'firstName\nuserId\ngetHTTPResponse\n' | \
+    exform -e 'myVariableName => my_variable_name' -e 'firstName => first_name'
+first_name
+user_id
+get_http_response
+```
+
+Two examples pin the direction. Swap the outputs to go the other way:
+`my_var_name => myVarName` (camelCase), `=> MyVarName` (PascalCase),
+`=> my-var-name` (kebab), or `=> My Var Name` (spaced Title Case). The word
+splitter is shared across all of them, so `getHTTPResponse` becomes
+`get_http_response` / `Get Http Response` and back without you writing a regex.
+
 ### Fill mode — the Flash Fill workflow
 
 Sometimes writing `IN => OUT` on the command line is awkward (quoting, long

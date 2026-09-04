@@ -136,6 +136,10 @@ const PRESETS = {
     ex: [["user_id","userId"],["first_name","firstName"]],
     data: "home_address\nis_active\ncreated_at"
   },
+  "camelCase → snake_case": {
+    ex: [["myVariableName","my_variable_name"],["firstName","first_name"]],
+    data: "getHTTPResponse\nuserId\nisActive"
+  },
   "Reorder a date": {
     ex: [["2021-03-05","05/03/2021"],["1999-12-31","31/12/1999"]],
     data: "2000-01-15\n2024-07-04\n1969-07-20"
@@ -265,7 +269,7 @@ async function boot(){
     try {
       await micropip.install("exform");           // latest from PyPI
     } catch (e) {
-      await micropip.install("./exform-0.3.1-py3-none-any.whl");  // offline fallback
+      await micropip.install("./exform-0.4.0-py3-none-any.whl");  // offline fallback
     }
     pyodide.runPython("import exform");
     statusEl.textContent = "Ready — runs entirely in your browser. Edit examples or pick a preset above.";

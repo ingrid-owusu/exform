@@ -110,6 +110,30 @@ def _camel(s: str, upper_first: bool) -> str:
     return "".join(parts)
 
 
+def _resep(s: str, sep: str) -> str:
+    """Re-join the component words of `s` with `sep`, lower-cased. Recognises
+    every naming convention on the *input* side (snake_case, kebab-case,
+    spaced, and camelCase / PascalCase / ACRONYM boundaries), so this is the
+    reverse of ``camel``/``pascal``: "myVarName" -> "my_var_name" (sep="_") or
+    "my-var-name" (sep="-"). Folds over a variable number of words. Degrades to
+    the lower-cased original if no words are found."""
+    words = _words(s)
+    if not words:
+        return s.lower()
+    return sep.join(w.lower() for w in words)
+
+
+def _title_words(s: str) -> str:
+    """Title Case with spaces, from any input convention. Splits on separators
+    *and* camelCase boundaries, capitalises each word, joins with a single
+    space: "myVarName", "my_var_name" and "my-var-name" all -> "My Var Name".
+    Folds over a variable number of words; degrades to the original if none."""
+    words = _words(s)
+    if not words:
+        return s
+    return " ".join(w[:1].upper() + w[1:].lower() for w in words)
+
+
 _INTRE = re.compile(r"([+-]?)(\d+)\Z")
 
 
@@ -159,6 +183,13 @@ TRANSFORMS: dict[str, Callable[[str], str]] = {
     # "my_var_name" -> "myVarName" (camel) or "MyVarName" (pascal).
     "camel": lambda s: _camel(s, False),
     "pascal": lambda s: _camel(s, True),
+    # The reverse direction: any convention (incl. camelCase/PascalCase) folded
+    # back to lower-cased snake_case / kebab-case, or to spaced Title Case.
+    # "getHTTPResponse" -> "get_http_response" / "get-http-response" /
+    # "Get Http Response". Case-*preserving* reseparation stays on kebab/snake.
+    "snakecase": lambda s: _resep(s, "_"),
+    "kebabcase": lambda s: _resep(s, "-"),
+    "titlecase": _title_words,
     # Zero-pad an integer to a fixed width (IDs, image0001.jpg, version parts).
     # One transform per width; the enumerative search picks the width that is
     # consistent with every example, and a second example rules out plain
@@ -187,6 +218,11 @@ _TRANSFORM_COST = {
     "acronym.": 3.0,
     "camel": 2.8,
     "pascal": 2.8,
+    # A hair above camel/pascal so a case-preserving snake/kebab still wins
+    # when it already fits (keeps existing behaviour on lowercase/spaced input).
+    "snakecase": 2.9,
+    "kebabcase": 2.9,
+    "titlecase": 2.9,
     # Slightly cheaper for the common widths, rising with width so ties break
     # toward the smallest width that still fits every example.
     **{f"zpad{w}": 2.4 + 0.1 * w for w in range(2, 9)},
@@ -335,7 +371,8 @@ _TFORMS = ["", "strip", "lower", "upper", "cap", "title", "first", "First",
 # Transforms that only make sense applied to a whole multi-word string (they
 # fold over every word), so they are enumerated only as whole-line atoms — not
 # on single fields, where they'd just duplicate cheaper char ops.
-_WHOLE_ONLY_TFORMS = ["acronym", "acronym.", "camel", "pascal"]
+_WHOLE_ONLY_TFORMS = ["acronym", "acronym.", "camel", "pascal",
+                      "snakecase", "kebabcase", "titlecase"]
 
 
 def build_atoms(inputs: list[str], use_slices: bool = True) -> list[Atom]:

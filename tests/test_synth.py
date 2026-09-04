@@ -331,3 +331,38 @@ def test_camel_accepts_any_input_convention():
         ["foo-bar-baz"],
     )
     assert out == ["fooBarBaz"]
+
+
+def test_camel_to_snake_case():
+    # The reverse of snake->camel: camelCase / PascalCase input folded to
+    # lower-cased snake_case. This must split on case boundaries (not just
+    # separators), so a whitespace-only reseparation cannot solve it.
+    prog, out = infer_apply(
+        [("myVariableName", "my_variable_name"), ("firstName", "first_name")],
+        ["getHTTPResponse", "userId"],
+    )
+    assert out == ["get_http_response", "user_id"]
+
+
+def test_camel_to_kebab_case():
+    prog, out = infer_apply(
+        [("myVariableName", "my-variable-name"), ("firstName", "first-name")],
+        ["fooBarBaz"],
+    )
+    assert out == ["foo-bar-baz"]
+
+
+def test_any_convention_to_title_case():
+    # camelCase and snake_case inputs both reach spaced Title Case.
+    prog, out = infer_apply(
+        [("myVariableName", "My Variable Name"), ("first_name", "First Name")],
+        ["http_status_code"],
+    )
+    assert out == ["Http Status Code"]
+
+
+def test_snakecase_does_not_regress_case_preserving_kebab():
+    # A case-preserving kebab example must still pick the cheaper case-preserving
+    # transform, not the new lower-casing one.
+    prog = synthesize([("My Cool Title", "My-Cool-Title")])
+    assert prog.apply("Another Great Post Here") == "Another-Great-Post-Here"

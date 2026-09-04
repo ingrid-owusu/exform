@@ -108,3 +108,20 @@ def test_cli_emit_runs_end_to_end():
     )
     assert gen.returncode == 0, gen.stderr
     assert _run_script(gen.stdout, ["deep_nested_key"]) == ["deepNestedKey"]
+
+
+def test_emit_camel_to_snake_case():
+    prog = synthesize([("myVariableName", "my_variable_name"),
+                       ("firstName", "first_name")])
+    script = to_python(prog, [("myVariableName", "my_variable_name"),
+                              ("firstName", "first_name")])
+    assert _run_script(script, ["getHTTPResponse", "userId"]) == [
+        "get_http_response", "user_id"]
+
+
+def test_emit_title_case():
+    prog = synthesize([("myVariableName", "My Variable Name"),
+                       ("first_name", "First Name")])
+    script = to_python(prog, [("myVariableName", "My Variable Name"),
+                              ("first_name", "First Name")])
+    assert _run_script(script, ["http_status_code"]) == ["Http Status Code"]

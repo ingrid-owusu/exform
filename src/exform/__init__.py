@@ -2,5 +2,5 @@
 
 from .synth import Program, SynthesisError, synthesize
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 __all__ = ["synthesize", "Program", "SynthesisError", "__version__"]

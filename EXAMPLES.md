@@ -165,6 +165,20 @@ httpRequestId
 x
 ```
 
+**camelCase → snake_case** &nbsp;·&nbsp; `line.snakecase` &nbsp;·&nbsp; the reverse direction, splits on case boundaries
+
+The same word splitter runs backwards: `camelCase` / `PascalCase` / `ACRONYM`
+input folds to lower-cased `snake_case` (`line.snakecase`), `kebab-case`
+(`line.kebabcase`), or spaced Title Case (`line.titlecase`).
+
+```console
+$ printf 'firstName\nuserId\ngetHTTPResponse\n' | exform \
+    -e 'myVariableName => my_variable_name' -e 'firstName => first_name' -q
+first_name
+user_id
+get_http_response
+```
+
 ## Web & files
 
 **Domain from a URL** &nbsp;·&nbsp; `field(/,2)`

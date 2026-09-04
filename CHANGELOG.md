@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 - 2026-09-04
+- **Case-convention conversion is now symmetric.** exform already turned any
+  input convention *into* `camelCase`/`PascalCase`; it can now go the other way
+  too — folding `camelCase` / `PascalCase` / `ACRONYM` input back to lower-cased
+  `snake_case` (`snakecase`), `kebab-case` (`kebabcase`), or spaced Title Case
+  (`titlecase`). `getHTTPResponse => get_http_response` and `firstName =>
+  First Name` are now inferable from two examples. The word splitter is the same
+  one used for the forward direction, so the two directions are consistent.
+  Case-*preserving* reseparation still resolves to the cheaper `snake`/`kebab`
+  transforms, so existing behaviour is unchanged. `--emit python` supports the
+  new transforms.
+
 ## 0.3.1 - 2026-09-04
 - **Fix:** scripts produced by `--emit python` now include
   `from __future__ import annotations`, so the helper functions carried over

@@ -50,6 +50,9 @@ def _t_expr(t: str, x: str) -> tuple[str, set[str]]:
         "acronym.": (f'_acronym({x}, ".")', {"_acronym"}),
         "camel": (f"_camel({x}, False)", {"_camel", "_words"}),
         "pascal": (f"_camel({x}, True)", {"_camel", "_words"}),
+        "snakecase": (f'_resep({x}, "_")', {"_resep", "_words"}),
+        "kebabcase": (f'_resep({x}, "-")', {"_resep", "_words"}),
+        "titlecase": (f"_title_words({x})", {"_title_words", "_words"}),
         "group,": (f'_group({x}, ",")', {"_group"}),
         "group_": (f'_group({x}, " ")', {"_group"}),
         "group.": (f'_group({x}, ".")', {"_group"}),
@@ -71,6 +74,8 @@ _HELPER_DEPS = {
     "_acronym": [],
     "_words": ["_WORD_SEP_RE", "_CAMEL_RE"],
     "_camel": [],
+    "_resep": [],
+    "_title_words": [],
     "_zpad": ["_INTRE"],
 }
 
@@ -144,7 +149,7 @@ def _collect(needs: set[str]) -> str:
             if dep not in seen:
                 seen.add(dep)
                 regex_consts.append(_regex_const_src(dep))
-        if name == "_camel":
+        if name in ("_camel", "_resep", "_title_words"):
             add("_words")
         func_src.append(inspect.getsource(getattr(synth, name)))
 
