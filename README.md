@@ -259,6 +259,28 @@ level=INFO here
 level=WARN there
 ```
 
+### Emit a standalone script — `--emit python`
+
+Don't want exform in your pipeline's dependencies? Infer the transform once and
+have exform hand you a plain, dependency-free `python3` script you can commit to
+your repo and run anywhere. `--emit python` prints that script instead of
+transforming input; it reads lines on stdin and writes them on stdout, exactly
+like exform itself.
+
+```console
+$ exform -e 'my_var_name => myVarName' -e 'home_address => homeAddress' --emit python > camelize.py
+$ printf 'deep_nested_key\nlong_field_name\n' | python3 camelize.py
+deepNestedKey
+longFieldName
+```
+
+The generated code is intentionally readable (`.lower()`, `_field(...)`, …), not
+an opaque blob, so a reviewer can see exactly what it does. Before printing
+anything, exform *runs* the generated script against your examples and refuses to
+emit a script that doesn't reproduce them — so you never ship a transform that
+silently disagrees with the examples it was derived from. Lines the transform
+can't handle are passed through unchanged.
+
 ### Handy flags
 
 | flag | meaning |
@@ -269,6 +291,7 @@ level=WARN there
 | `--all` | in `--in-line` mode, rewrite every match on a line (default: first) |
 | `--fill` | Flash Fill mode: complete a 2-column `input<TAB>output` table |
 | `--col-sep SEP` | column separator for `--fill` (default: TAB) |
+| `--emit python` | print a standalone, dependency-free script that reproduces the transform |
 | `--explain` | print the inferred program to stderr |
 | `-q, --quiet` | suppress non-fatal warnings (e.g. constant-program hint) |
 | `--dry-run` | infer & print the program, don't touch input |

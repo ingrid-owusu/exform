@@ -244,13 +244,19 @@ class Atom:
     cost: float
     fn: Callable[[str], Optional[str]]
     kind: str = "expr"  # "expr" or "const"
+    # Structured description of the atom's operation, used only by the code
+    # emitter (exform.emit) to render an equivalent standalone script. It is
+    # never consulted by the runtime apply() path, so populating it cannot
+    # affect existing behaviour.
+    meta: dict = field(default_factory=dict)
 
     def __call__(self, line: str) -> Optional[str]:
         return self.fn(line)
 
 
 def _const_atom(text: str) -> Atom:
-    return Atom(name=repr(text), cost=2.0 + 1.2 * len(text), fn=lambda _l, t=text: t, kind="const")
+    return Atom(name=repr(text), cost=2.0 + 1.2 * len(text), fn=lambda _l, t=text: t,
+                kind="const", meta={"op": "const", "text": text})
 
 
 def _field_atom(delim, dlabel, dcost, idx, tname, tcost) -> Atom:
@@ -268,13 +274,15 @@ def _field_atom(delim, dlabel, dcost, idx, tname, tcost) -> Atom:
     if tname:
         label += f".{tname}"
     cost = 6.0 + dcost + 0.6 * abs(idx) + tcost
-    return Atom(name=label, cost=cost, fn=fn)
+    return Atom(name=label, cost=cost, fn=fn,
+                meta={"op": "field", "delim": delim, "idx": idx, "t": tname})
 
 
 def _whole_atom(tname, tcost) -> Atom:
     tfn = TRANSFORMS[tname]
     label = "line" + (f".{tname}" if tname else "")
-    return Atom(name=label, cost=4.0 + tcost, fn=lambda line, t=tfn: t(line))
+    return Atom(name=label, cost=4.0 + tcost, fn=lambda line, t=tfn: t(line),
+                meta={"op": "whole", "t": tname})
 
 
 def _regex_atom(pattern, plabel, pcost, nth, tname, tcost) -> Atom:
@@ -296,7 +304,8 @@ def _regex_atom(pattern, plabel, pcost, nth, tname, tcost) -> Atom:
     if tname:
         label += f".{tname}"
     cost = 8.0 + pcost + 0.6 * abs(nth) + tcost
-    return Atom(name=label, cost=cost, fn=fn)
+    return Atom(name=label, cost=cost, fn=fn,
+                meta={"op": "regex", "pattern": pattern, "nth": nth, "t": tname})
 
 
 def _substr_atom(a, b, tname, tcost) -> Atom:
@@ -310,7 +319,8 @@ def _substr_atom(a, b, tname, tcost) -> Atom:
     if tname:
         label += f".{tname}"
     cost = 12.0 + 0.3 * abs(a) + tcost
-    return Atom(name=label, cost=cost, fn=fn)
+    return Atom(name=label, cost=cost, fn=fn,
+                meta={"op": "slice", "a": a, "b": b, "t": tname})
 
 
 # ---------------------------------------------------------------------------

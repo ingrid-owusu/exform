@@ -107,6 +107,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="only infer and print the program; do not read/transform input",
     )
     p.add_argument(
+        "--emit",
+        choices=["python"],
+        metavar="LANG",
+        help="instead of transforming input, print a standalone, "
+        "dependency-free script (currently: python) that reproduces the "
+        "inferred transform. Reads stdin, writes stdout, no exform needed.",
+    )
+    p.add_argument(
         "--in-line",
         "--inline",
         dest="in_line",
@@ -286,6 +294,13 @@ def _run_inline(args, examples) -> int:
 def run(argv: Optional[list[str]] = None) -> int:
     args = build_parser().parse_args(argv)
 
+    if args.emit and (args.fill or args.in_line):
+        sys.stderr.write(
+            "exform: --emit is only supported for the default whole-line mode "
+            "(not with --fill or --in-line)\n"
+        )
+        return 2
+
     if args.fill:
         return _run_fill(args)
 
@@ -337,6 +352,17 @@ def run(argv: Optional[list[str]] = None) -> int:
                 "-e 'OTHER_IN => OTHER_OUT',\n"
                 "        so exform can generalise (pass --quiet to silence).\n"
             )
+
+    if args.emit:
+        from .emit import to_python, EmitError
+
+        try:
+            script = to_python(program, examples)
+        except EmitError as exc:
+            sys.stderr.write(f"exform: --emit could not build a script: {exc}\n")
+            return 1
+        sys.stdout.write(script)
+        return 0
 
     if args.dry_run:
         return 0

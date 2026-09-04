@@ -323,6 +323,18 @@ $ printf 'a 1 2 3 b\n' | exform --in-line --all -e 'a 1 b => a [1] b'
 a [1] [2] [3] b
 ```
 
+**Emit a standalone, dependency-free script (`--emit python`)**
+
+```console
+$ exform -e 'my_var_name => myVarName' -e 'home_address => homeAddress' --emit python > camelize.py
+$ printf 'deep_nested_key\n' | python3 camelize.py
+deepNestedKey
+```
+
+The generated `camelize.py` has no dependency on exform — commit it and run it
+anywhere Python is available. exform verifies the script reproduces your
+examples before printing it.
+
 ---
 
 Got a recipe exform can't learn, or one worth adding? Open an issue — the

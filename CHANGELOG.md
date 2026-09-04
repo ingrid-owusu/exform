@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0 - 2026-09-04
+- **Emit a standalone script (`--emit python`).** exform can now turn an
+  inferred transform into a plain, dependency-free `python3` script instead of
+  applying it — infer once, then commit the generated script to your repo and
+  run it anywhere with no exform install. The output reads stdin and writes
+  stdout exactly like exform, and is deliberately human-readable (`.lower()`,
+  `_field(...)`, …) rather than an opaque interpreter, so it can be code
+  reviewed. The helper functions are lifted verbatim from the engine so the
+  emitted code cannot drift, and — mirroring the synthesiser's own correctness
+  gate — exform executes the generated script against your examples and refuses
+  to emit anything that doesn't reproduce them. Lines the transform can't handle
+  pass through unchanged. Supported for the default whole-line mode.
+
 ## 0.2.0 - 2026-09-02
 - **In-line mode (`--in-line`) — sed-by-example.** exform can now change only
   the substring that differs between an example's input and output, leaving the
