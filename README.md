@@ -66,6 +66,12 @@ uvx exform --help
 pip install exform
 ```
 
+On macOS/Linux you can also use Homebrew:
+
+```bash
+brew install ingrid-owusu/tap/exform
+```
+
 Prefer to install straight from source? Both of these work too:
 
 ```bash
