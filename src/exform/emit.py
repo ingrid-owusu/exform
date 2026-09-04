@@ -209,9 +209,13 @@ def to_python(program: Program, examples: Iterable[tuple[str, str]]) -> str:
     helpers = _collect(needs)
 
     examples = list(examples)
-    imports = "import sys\n"
+    # `from __future__ import annotations` keeps PEP 585 generics (list[str],
+    # etc.) that appear in helpers lifted from the engine as strings, so the
+    # emitted script runs on Python 3.8/3.9 where those annotations would
+    # otherwise be evaluated at runtime and raise TypeError.
+    imports = "from __future__ import annotations\n\nimport sys\n"
     if "re." in helpers:
-        imports = "import re\nimport sys\n"
+        imports = "from __future__ import annotations\n\nimport re\nimport sys\n"
     header = _HEADER.format(
         program=program.explain(), n=len(examples), imports=imports
     )

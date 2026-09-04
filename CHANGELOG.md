@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 - 2026-09-04
+- **Fix:** scripts produced by `--emit python` now include
+  `from __future__ import annotations`, so the helper functions carried over
+  from the engine (which use `list[str]` annotations) run on Python 3.8/3.9
+  instead of raising `TypeError: 'type' object is not subscriptable`.
+
 ## 0.3.0 - 2026-09-04
 - **Emit a standalone script (`--emit python`).** exform can now turn an
   inferred transform into a plain, dependency-free `python3` script instead of
