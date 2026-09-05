@@ -337,6 +337,28 @@ $ printf 'a 1 2 3 b\n' | exform --in-line --all -e 'a 1 b => a [1] b'
 a [1] [2] [3] b
 ```
 
+**Reshape one column of a CSV/TSV (`--field`)**
+
+```console
+$ printf 'id,date,amt\n1,2021-05-01,100\n2,2022-12-31,250\n' \
+    | exform --field 2 -e '2021-05-01 => 05/01/2021' -e '2022-12-31 => 12/31/2022'
+id,date,amt
+1,05/01/2021,100
+2,12/31/2022,250
+```
+
+Only column 2 changes; the other columns (and the header) are left exactly as
+they were. Use `--field-sep $'\t'` for TSV, and `--field 2,4` to reshape several
+columns at once.
+
+```console
+$ printf 'name\tcity\nJOHN\tnyc\nJANE\tla\n' \
+    | exform --field 1 --field-sep $'\t' -e 'JOHN => John' -e 'JANE => Jane'
+name	city
+John	nyc
+Jane	la
+```
+
 **Emit a standalone, dependency-free script (`--emit python`)**
 
 ```console

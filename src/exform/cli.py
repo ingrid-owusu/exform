@@ -130,6 +130,23 @@ def build_parser() -> argparse.ArgumentParser:
         "the first)",
     )
     p.add_argument(
+        "--field",
+        "--col",
+        dest="field",
+        metavar="N",
+        help="column mode: apply the transform only to the given 1-based "
+        "column(s) of each delimiter-separated row, leaving the other columns "
+        "byte-for-byte intact (e.g. --field 3 reshapes column 3 of a CSV). "
+        "Accepts a comma-separated list, e.g. --field 2,4. Your examples are "
+        "the cell (column) before=>after.",
+    )
+    p.add_argument(
+        "--field-sep",
+        default=",",
+        metavar="SEP",
+        help="column separator for --field mode (default: ',')",
+    )
+    p.add_argument(
         "--no-slices",
         action="store_true",
         help="disable positional slice atoms (faster, more general)",
@@ -291,13 +308,77 @@ def _run_inline(args, examples) -> int:
     return 0
 
 
+def _parse_fields(spec: str) -> list[int]:
+    """Parse a --field spec like '3' or '2,4' into 1-based column indices."""
+    cols: list[int] = []
+    for part in spec.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            n = int(part)
+        except ValueError:
+            raise SystemExit(
+                f"exform: --field expects column number(s), got {part!r}"
+            )
+        if n < 1:
+            raise SystemExit(
+                f"exform: --field columns are 1-based; got {n}"
+            )
+        cols.append(n)
+    if not cols:
+        raise SystemExit("exform: --field needs at least one column number")
+    return cols
+
+
+def _run_field(args, program: "Program") -> int:
+    """Column mode: apply the inferred cell transform to selected columns of
+    each delimiter-separated row, leaving every other column untouched."""
+    sep = args.field_sep
+    cols = _parse_fields(args.field)
+    out = sys.stdout
+    for line in _iter_input(args.file):
+        parts = line.split(sep)
+        drop_line = False
+        for c in cols:
+            idx = c - 1
+            if idx >= len(parts):
+                continue  # row has fewer columns; nothing to do here
+            res = program.apply(parts[idx])
+            if res is None:
+                if args.on_error == "keep":
+                    res = parts[idx]
+                elif args.on_error == "empty":
+                    res = ""
+                elif args.on_error == "skip":
+                    drop_line = True
+                    break
+                else:  # fail
+                    sys.stderr.write(
+                        f"exform: could not transform column {c} of row: "
+                        f"{line!r}\n"
+                    )
+                    return 1
+            parts[idx] = res
+        if drop_line:
+            continue
+        out.write(sep.join(parts) + "\n")
+    return 0
+
+
 def run(argv: Optional[list[str]] = None) -> int:
     args = build_parser().parse_args(argv)
 
-    if args.emit and (args.fill or args.in_line):
+    if args.emit and (args.fill or args.in_line or args.field):
         sys.stderr.write(
             "exform: --emit is only supported for the default whole-line mode "
-            "(not with --fill or --in-line)\n"
+            "(not with --fill, --in-line, or --field)\n"
+        )
+        return 2
+
+    if args.field and (args.fill or args.in_line):
+        sys.stderr.write(
+            "exform: --field cannot be combined with --fill or --in-line\n"
         )
         return 2
 
@@ -366,6 +447,9 @@ def run(argv: Optional[list[str]] = None) -> int:
 
     if args.dry_run:
         return 0
+
+    if args.field:
+        return _run_field(args, program)
 
     out = sys.stdout
     exit_code = 0

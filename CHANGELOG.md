@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0 - 2026-09-05
+- **Column mode (`--field`).** Reshape one or more columns of a CSV/TSV by
+  example while leaving every other column byte-for-byte intact — the awk
+  `$3 = ...` job, by example. Give the cell before=>after (e.g.
+  `-e '2021-05-01 => 05/01/2021'`), then `--field 3` (or `--field 2,4` for
+  several columns) applies the inferred transform only to that column of each
+  row. `--field-sep` chooses the delimiter (default `,`; use `--field-sep $'\t'`
+  for TSV). Rows shorter than the target column pass through untouched, and the
+  usual `--on-error {keep,empty,skip,fail}` policy governs cells the rule can't
+  transform. Built entirely on the existing engine — no change to any other
+  mode. Note: `--field` uses a plain delimiter split (not full RFC-4180 quote
+  handling), so untouched columns are preserved exactly; if a transformed cell
+  itself contains the delimiter it will shift that row's column count.
+
 ## 0.4.0 - 2026-09-04
 - **Case-convention conversion is now symmetric.** exform already turned any
   input convention *into* `camelCase`/`PascalCase`; it can now go the other way

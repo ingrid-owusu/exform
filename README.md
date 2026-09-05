@@ -285,6 +285,37 @@ level=INFO here
 level=WARN there
 ```
 
+### Column mode — reshape one CSV/TSV column by example
+
+Got a CSV or TSV and only want to fix **one column**? `--field N` applies the
+inferred transform to column `N` of every row and leaves the other columns
+byte-for-byte intact — the `awk '{ $3 = ... }'` job, by example. Your examples
+are the cell (the column value) before=>after.
+
+```console
+$ cat sales.csv
+id,date,amount
+1,2021-05-01,100
+2,2022-12-31,250
+
+$ exform --field 2 -e '2021-05-01 => 05/01/2021' -e '2022-12-31 => 12/31/2022' sales.csv
+id,date,amount
+1,05/01/2021,100
+2,12/31/2022,250
+```
+
+Only column 2 changed; `id`, `amount`, and the header row are untouched (the
+header cell `date` doesn't match the rule, so it's kept). Use `--field-sep` to
+pick the delimiter — `--field-sep $'\t'` for TSV — and pass several columns at
+once with a comma list, e.g. `--field 2,4`. Rows shorter than the target column
+pass straight through, and `--on-error {keep,empty,skip,fail}` decides what
+happens to a cell the rule can't transform.
+
+> `--field` splits on the delimiter literally (it is not a full RFC-4180 CSV
+> parser), which keeps untouched columns exactly as they were. If a *transformed*
+> cell ends up containing the delimiter itself, that row's column count will
+> shift — so avoid transforms that inject the separator into a column.
+
 ### Emit a standalone script — `--emit python`
 
 Don't want exform in your pipeline's dependencies? Infer the transform once and
@@ -315,6 +346,8 @@ can't handle are passed through unchanged.
 | `-E, --examples-file FILE` | read examples from a file, one per line |
 | `--in-line` | sed-by-example: change only the differing substring in each line |
 | `--all` | in `--in-line` mode, rewrite every match on a line (default: first) |
+| `--field N` (`--col`) | reshape only column `N` (or `2,4`) of a delimiter-separated row |
+| `--field-sep SEP` | column separator for `--field` (default: `,`) |
 | `--fill` | Flash Fill mode: complete a 2-column `input<TAB>output` table |
 | `--col-sep SEP` | column separator for `--fill` (default: TAB) |
 | `--emit python` | print a standalone, dependency-free script that reproduces the transform |
